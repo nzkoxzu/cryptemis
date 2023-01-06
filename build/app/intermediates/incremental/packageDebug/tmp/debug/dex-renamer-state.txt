@@ -1,0 +1,4 @@
+#Fri Jan 06 15:35:39 CET 2023
+base.0=/home/myadmin/Documents/ESGI/4A/PA/cryptemis/build/app/intermediates/dex/debug/mergeDexDebug/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
