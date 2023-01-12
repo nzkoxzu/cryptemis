@@ -1,9 +1,23 @@
+<h3 align="center">
+
+<p align="center">
+<img src="https://getlogo.net/wp-content/uploads/2020/08/flutter-logo-vector.png" width="" height="200" />
+</p>
+
+  Cross-platform mobile application that aims to be privacy friendly.<br><br>
+  <a href="#">
+      <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="cryptemis" height=24 title="cryptemis">
+    <img src="https://awesome.re/badge.svg" alt="Awesome" height=24>
+    <img src="https://img.shields.io/github/contributors/nzkoxzu/cryptemis.svg?style=plastic&logo=appveyor&logo=appveyor&color=success" alt="cryptemis" height=24>
+            <img src="https://img.shields.io/github/forks/nzkoxzu/cryptemis.svg?style=plastic&logo=appveyor&logo=appveyor&color=red" alt="cryptemis" height=24>
+    <img src="https://img.shields.io/github/issues/nzkoxzu/cryptemis.svg?style=plastic&logo=appveyor&logo=appveyor&color=orange" alt="cryptemis" height=24>
+  </a>
+
+</h3>
+
+
 # cryptemis
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Issues][issues-shield]][issues-url]
 
 
 Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can record every interesting data on the phone for the last X minutes. Data is stored in a secured container based on the [CryptoPQ](https://github.com/Denis-REMACLE/CryptoPQ) project.
@@ -28,6 +42,7 @@ Here are the required dependencies :
 ### RoadMap
 
 - [x] Define
+- [ ] Set custom logo
 - [ ] Improve UI Dashboard
 - [ ] Profile page
 - [ ] Implement recording
@@ -37,31 +52,3 @@ Here are the required dependencies :
   - [ ] CryptoPQ
   - [ ] Auto-sending data to emergency services
 - [x] README.md update
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[contributors-shield]: https://img.shields.io/github/contributors/nzkoxzu/cryptemis.svg??style=plastic&logo=appveyor&logo=appveyor&color=success
-[contributors-url]: https://github.com/nzkoxzu/cryptemis/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/nzkoxzu/cryptemis.svg?style=?style=plastic&logo=appveyor&logo=appveyor&color=yellow
-[forks-url]: https://github.com/nzkoxzu/cryptemis/network/members
-[license-shield]: https://img.shields.io/github/license/nzkoxzu/cryptemis.svg?style=?style=plastic&logo=appveyor&logo=appveyor&color=orange
-[license-url]: https://github.com/nzkoxzu/cryptemis/blob/master/LICENSE.txt
-[issues-shield]: https://img.shields.io/github/issues/nzkoxzu/cryptemis.svg?style=?style=plastic&logo=appveyor&logo=appveyor&color=red
-[issues-url]: https://github.com/nzkoxzu/cryptemis/issues
-
