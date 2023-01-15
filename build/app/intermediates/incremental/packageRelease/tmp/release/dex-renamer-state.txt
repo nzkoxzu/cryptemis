@@ -1,4 +1,0 @@
-#Fri Jan 06 21:32:57 CET 2023
-base.0=/home/myadmin/Documents/ESGI/4A/PA/cryptemis/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
-renamed.0=classes.dex
-path.0=classes.dex
