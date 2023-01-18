@@ -44,7 +44,7 @@ Here are the required dependencies :
 - [x] Define
 - [ ] Set custom logo
 - [ ] Improve UI Dashboard
-- [ ] Profile page
+- [ ] Container creation
 - [ ] Implement recording
   - [ ] Location history / map
   - [ ] Audio recording
