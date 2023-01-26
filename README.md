@@ -1,7 +1,7 @@
 <h3 align="center">
 
 <p align="center">
-<img src="https://getlogo.net/wp-content/uploads/2020/08/flutter-logo-vector.png" width="" height="200" />
+<img src="https://i.imgur.com/Pmp0NQd.png" />
 </p>
 
   Cross-platform mobile application that aims to be privacy friendly.<br><br>
