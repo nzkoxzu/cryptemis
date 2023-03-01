@@ -20,7 +20,7 @@
 
 
 
-Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can record every interesting data on the phone for the last X minutes. Data is stored in a secured container based on the [CryptoPQ](https://github.com/Denis-REMACLE/CryptoPQ) project.
+Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can locally store encrypted files. ENcryption based on the [CryptoPQ](https://github.com/Denis-REMACLE/CryptoPQ) project.
 
 
 
