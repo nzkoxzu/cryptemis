@@ -20,7 +20,7 @@
 
 
 
-Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can locally store encrypted files. Encryption based on the [CryptoPQ](https://github.com/Denis-REMACLE/CryptoPQ) project.
+Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can locally store encrypted files using our layered encryption processus. 
 
 
 
@@ -37,15 +37,27 @@ This is still a proof of concept.
 ### Dependencies
 
 Here are the required dependencies :
+* [kyber](https://pub.dev/packages/kyber)
+* [crypto](https://pub.dev/packages/crypto)
+* [pointycastle](https://pub.dev/packages/pointycastle)
 
 
 ### RoadMap
 
 - [x] Define
 - [x] Set custom logo
-- [ ] Implement Dashboard UI
-- [ ] Define encryption/decryption method
-  - [ ] Implement encryption/decryption
+- [x] Implement Dashboard UI
+- [ ] Define layered encryption processus
+  - [ ] Implementing
   - [ ] Forensic audit
-  - [ ] CryptoPQ
+  - [ ] Battle-tested app
 - [x] README.md update
+
+
+
+### Layered encryption processus
+
+Potential processus :
+
+
+
