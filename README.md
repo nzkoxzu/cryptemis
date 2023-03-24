@@ -55,13 +55,15 @@ Here are the required dependencies :
 
 
 
-### Layered encryption processus
+# Layered encryption processus
 
-##Potential processus :
+## Potential processus :
 
-#Encryption :
+### Encryption :
+
 ![image](https://user-images.githubusercontent.com/79084290/227641238-ec4fa01b-415b-4f4d-952c-2c3c32832643.png)
 
-#Decryption :
+### Decryption :
+
 ![image](https://user-images.githubusercontent.com/79084290/227641562-1bf95c25-0bd1-49be-b893-8c3fcdfd50a3.png)
 
