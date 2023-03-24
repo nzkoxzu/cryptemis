@@ -55,9 +55,7 @@ Here are the required dependencies :
 
 
 
-# Layered encryption processus
-
-## Potential processus :
+# Layered encryption and decryption processus :
 
 ### Encryption :
 
