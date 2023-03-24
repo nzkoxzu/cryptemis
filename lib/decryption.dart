@@ -3,8 +3,6 @@ import 'package:kyber/kyber.dart';
 import 'package:pointycastle/pointycastle.dart';
 
 String decryptRSA(String ciphertext, String privateKey) {
-  final privateKeyBytes = base64.decode(privateKey);
-
   final rsaPrivateKey = RSAKeyParser().parse(privateKeyBytes);
 
   final ciphertextBytes = base64.decode(ciphertext);

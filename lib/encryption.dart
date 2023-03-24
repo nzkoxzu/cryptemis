@@ -3,8 +3,6 @@ import 'package:kyber/kyber.dart';
 import 'package:pointycastle/pointycastle.dart';
 
 String encryptRSA(String plaintext, String publicKey) {
-  final publicKeyBytes = base64.decode(publicKey);
-
   final rsaPublicKey = RSAPublicKeyParser().parse(publicKeyBytes);
 
   final plaintextBytes = utf8.encode(plaintext);
