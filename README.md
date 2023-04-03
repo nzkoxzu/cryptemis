@@ -1,68 +1,16 @@
-<h3 align="center">
+# lib
 
-<p align="center">
-<img src="https://i.imgur.com/Pmp0NQd.png" />
-</p>
+A new Flutter project.
 
-  Cross-platform mobile application that aims to be privacy friendly.<br><br>
-  <a href="#">
-      <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="cryptemis" height=24 title="cryptemis">
-    <img src="https://awesome.re/badge.svg" alt="Awesome" height=24>
-    <img src="https://img.shields.io/github/contributors/nzkoxzu/cryptemis.svg?style=plastic&logo=appveyor&logo=appveyor&color=success" alt="cryptemis" height=24>
-            <img src="https://img.shields.io/github/forks/nzkoxzu/cryptemis.svg?style=plastic&logo=appveyor&logo=appveyor&color=red" alt="cryptemis" height=24>
-    <img src="https://img.shields.io/github/issues/nzkoxzu/cryptemis.svg?style=plastic&logo=appveyor&logo=appveyor&color=orange" alt="cryptemis" height=24>
-  </a>
+## Getting Started
 
-</h3>
+This project is a starting point for a Flutter application.
 
+A few resources to get you started if this is your first Flutter project:
 
-# cryptemis
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-
-
-Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can locally store encrypted files using our layered encryption processus. 
-
-
-
-
-This is still a proof of concept.
-
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/cryptemis)  
-[![Get it from the Play Store](https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg)](https://play.google.com/store/apps/details?id=org.nzkoxzu.cryptemis)
-
-
-
-
-
-### Dependencies
-
-Here are the required dependencies :
-* [kyber](https://pub.dev/packages/kyber)
-* [crypto](https://pub.dev/packages/crypto)
-* [pointycastle](https://pub.dev/packages/pointycastle)
-
-
-### RoadMap
-
-- [x] Define
-- [x] Set custom logo
-- [x] Implement Dashboard UI
-- [ ] Define layered encryption processus
-  - [ ] Implementing
-  - [ ] Forensic audit
-  - [ ] Battle-tested app
-- [x] README.md update
-
-
-
-# Layered encryption and decryption processus :
-
-### Encryption :
-
-![image](https://user-images.githubusercontent.com/79084290/227641238-ec4fa01b-415b-4f4d-952c-2c3c32832643.png)
-
-### Decryption :
-
-![image](https://user-images.githubusercontent.com/79084290/227642276-8c652d3f-5699-4455-aea1-67be536f17a4.png)
-
-
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
