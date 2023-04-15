@@ -47,10 +47,11 @@ Here are the required dependencies :
 - [x] Define
 - [x] Set custom logo
 - [x] Implement Dashboard UI
-- [ ] Define layered encryption processus
-  - [ ] Implementing
-  - [ ] Forensic audit
+- [ ] Implement Dart POC
+  - [ ] Folder encryption
+  - [ ] File name anonymization
   - [ ] Battle-tested app
+- [ ] Make interaction between DART and UI  
 - [x] README.md update
 
 
