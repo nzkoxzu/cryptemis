@@ -41,22 +41,21 @@ Future<List<int>> sodiumCipher(
  
   Uint8List bytes;
   if (cipher) {
+    // ciphers the data
     bytes = sodium.crypto.secretBox.easy(
       message: Uint8List.fromList(data),
       nonce: Uint8List.fromList(nonce),
       key: secureKey,
     );
   } else {
-    print(data);
-    print(nonce);
-    print(key);
+    // deciphers the data
     bytes = sodium.crypto.secretBox.openEasy(
       cipherText: Uint8List.fromList(data),
       nonce: Uint8List.fromList(nonce),
       key: secureKey,
     );
   }
-// Since these keys wrap native memory, it is mandatory that you dispose of them after you are done with a key, as otherwise they will leak memory.
+  // Since these keys wrap native memory, it is mandatory that you dispose of them after you are done with a key, as otherwise they will leak memory.
   secureKey.dispose();
   return bytes;
 }
@@ -129,11 +128,31 @@ Future<void> cipher(
     throw Exception("whoops");
   }
 }
+
+Future<SecureKey> keygen(String password) async {
+  // initialize the sodium APIs
+  final sodium = await SodiumInit.init(libsodium);
  
+  // generate a key
+  var key = sodium.crypto.secretBox.keygen(password);
+  return key;
+}
+ 
+Future<List<int>> nonceGen() async {
+  // initialize the sodium APIs
+  final sodium = await SodiumInit.init(libsodium);
+  // generate a nonce
+  var nonce = sodium.randombytes.buf(
+    sodium.crypto.secretBox.nonceBytes,
+  );
+  return nonce;
+}
+
 void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('input', abbr: 'i')
-    ..addOption('output', abbr: 'o');
+    ..addOption('output', abbr: 'o')
+    ..addOption('password', abbr: 'p');
  
   ArgResults args = parser.parse(arguments);
   var isInput = await Directory(args['input']).exists();
@@ -143,17 +162,13 @@ void main(List<String> arguments) async {
  
   var input = args['input'];
   var output = args['output'];
+  var password = args['password'];
   //FIXME absolute path vs relative
   print(input + " " + output);
  
-// initialize the sodium APIs
-  final sodium = await SodiumInit.init(libsodium);
- 
-  final SecureKey key = sodium.crypto.secretBox.keygen();
-  final nonce = sodium.randombytes.buf(
-    sodium.crypto.secretBox.nonceBytes,
-  );
- 
+  var key = await keygen(password);
+  var nonce = await nonceGen();
+
   await cipher(
     Directory(input),
     Directory(output),
@@ -164,13 +179,13 @@ void main(List<String> arguments) async {
   );
  
   await cipher(
-    Directory(input),
     Directory(output),
+    Directory("output"),
     key.extractBytes(),
     nonce,
     0,
     false,
   );
- 
+
   key.dispose();
 }
