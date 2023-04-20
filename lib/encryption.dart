@@ -129,12 +129,12 @@ Future<void> cipher(
   }
 }
 
-Future<SecureKey> keygen(String password) async {
+Future<SecureKey> keygen() async {
   // initialize the sodium APIs
   final sodium = await SodiumInit.init(libsodium);
  
   // generate a key
-  var key = sodium.crypto.secretBox.keygen(password);
+  var key = sodium.crypto.secretBox.keygen();
   return key;
 }
  
@@ -151,8 +151,7 @@ Future<List<int>> nonceGen() async {
 void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('input', abbr: 'i')
-    ..addOption('output', abbr: 'o')
-    ..addOption('password', abbr: 'p');
+    ..addOption('output', abbr: 'o');
  
   ArgResults args = parser.parse(arguments);
   var isInput = await Directory(args['input']).exists();
@@ -162,11 +161,10 @@ void main(List<String> arguments) async {
  
   var input = args['input'];
   var output = args['output'];
-  var password = args['password'];
   //FIXME absolute path vs relative
   print(input + " " + output);
  
-  var key = await keygen(password);
+  var key = await keygen();
   var nonce = await nonceGen();
 
   await cipher(
