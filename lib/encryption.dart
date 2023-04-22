@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:args/args.dart';
 import 'package:path/path.dart' as path;
 // required imports
 import 'dart:ffi';
 import 'package:sodium/sodium.dart';
- 
+
 // load the dynamic library into dart
 final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so');
- 
+
 String getPath(String path, String name) {
   var index = path.indexOf(name);
   if (index == -1) {
@@ -17,7 +18,7 @@ String getPath(String path, String name) {
   }
   return path.substring(index + name.length);
 }
- 
+
 Future<void> directories(Directory input, Directory output) async {
   var structure = input.list(recursive: true, followLinks: false);
   await for (var entity in structure) {
@@ -28,7 +29,7 @@ Future<void> directories(Directory input, Directory output) async {
     }
   }
 }
- 
+
 Future<List<int>> sodiumCipher(
   List<int> key,
   List<int> data,
@@ -38,7 +39,7 @@ Future<List<int>> sodiumCipher(
   // initialize the sodium APIs
   final sodium = await SodiumInit.init(libsodium);
   var secureKey = SecureKey.fromList(sodium, Uint8List.fromList(key));
- 
+
   Uint8List bytes;
   if (cipher) {
     // ciphers the data
@@ -59,7 +60,7 @@ Future<List<int>> sodiumCipher(
   secureKey.dispose();
   return bytes;
 }
- 
+
 Future<List<int>> tacos(
   List<int> key,
   List<int> data,
@@ -72,7 +73,7 @@ Future<List<int>> tacos(
   }
   throw Exception("no tacos");
 }
- 
+
 Future<void> files(
   Directory input,
   Directory output,
@@ -88,12 +89,12 @@ Future<void> files(
       var filename = getPath(entity.path, input.path);
       var file = File(entity.path);
       var newFile = File(output.path + filename);
- 
+
       if (await newFile.exists()) {
         await newFile.delete();
       }
       await newFile.create(recursive: true);
- 
+
       var readStream = file.openRead();
       var writeStream = newFile.openWrite();
       var cipherStream = StreamTransformer<List<int>, List<int>>.fromHandlers(
@@ -112,7 +113,7 @@ Future<void> files(
     }
   }
 }
- 
+
 Future<void> cipher(
   Directory input,
   Directory output,
@@ -129,15 +130,30 @@ Future<void> cipher(
   }
 }
 
-Future<SecureKey> keygen() async {
+Future<SecureKey> keygen(Int8List password, Uint8List salt) async {
   // initialize the sodium APIs
   final sodium = await SodiumInit.init(libsodium);
- 
-  // generate a key
-  var key = sodium.crypto.secretBox.keygen();
+
+  // generate a key from the password
+  var key = sodium.crypto.pwhash(
+    outLen: sodium.crypto.secretBox.keyBytes,
+    password: password,
+    salt: salt,
+    opsLimit: sodium.crypto.pwhash.opsLimitInteractive,
+    memLimit: sodium.crypto.pwhash.memLimitInteractive,
+  );
+
   return key;
 }
- 
+
+Future<Uint8List> saltGen() async {
+  // initialize the sodium APIs
+  final sodium = await SodiumInit.init(libsodium);
+  // generate a nonce
+  var salt = sodium.randombytes.buf(sodium.crypto.pwhash.saltBytes);
+  return salt;
+}
+
 Future<List<int>> nonceGen() async {
   // initialize the sodium APIs
   final sodium = await SodiumInit.init(libsodium);
@@ -148,23 +164,52 @@ Future<List<int>> nonceGen() async {
   return nonce;
 }
 
+String bytesToHex(List<int> bytes) {
+  final hexDigits = '0123456789ABCDEF';
+  final chars = List<String>.from(
+    bytes.map((byte) => hexDigits[(byte >> 4) & 0x0f] + hexDigits[byte & 0x0f]),
+  );
+  return chars.join('');
+}
+
+List<int> hexToBytes(String hex) {
+  final bytes = <int>[];
+  for (var i = 0; i < hex.length; i += 2) {
+    bytes.add(int.parse(hex.substring(i, i + 2), radix: 16));
+  }
+  return bytes;
+}
+
+Future<String> exportNonce(List<int> nonce) async {
+  final hexNonce = bytesToHex(nonce);
+  return hexNonce;
+}
+
+Future<List<int>> importNonce(String hexNonce) async {
+  final nonce = hexToBytes(hexNonce);
+  return nonce;
+}
+
 void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('input', abbr: 'i')
-    ..addOption('output', abbr: 'o');
- 
+    ..addOption('output', abbr: 'o')
+    ..addOption('password', abbr: 'p');
+
   ArgResults args = parser.parse(arguments);
   var isInput = await Directory(args['input']).exists();
   if (!isInput) {
     throw Exception('input not found');
   }
- 
+
   var input = args['input'];
   var output = args['output'];
+  var password = Int8List.fromList(args['password'].codeUnits);
   //FIXME absolute path vs relative
   print(input + " " + output);
- 
-  var key = await keygen();
+
+  var salt = await saltGen();
+  var key = await keygen(password, salt);
   var nonce = await nonceGen();
 
   await cipher(
@@ -175,7 +220,7 @@ void main(List<String> arguments) async {
     0,
     true,
   );
- 
+
   await cipher(
     Directory(output),
     Directory("output"),
