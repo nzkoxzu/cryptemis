@@ -180,14 +180,11 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-Future<String> exportNonce(List<int> nonce) async {
-  final hexNonce = bytesToHex(nonce);
-  return hexNonce;
-}
-
-Future<List<int>> importNonce(String hexNonce) async {
-  final nonce = hexToBytes(hexNonce);
-  return nonce;
+Map exportConfig(String nonce, String salt){
+  var config = {"nonce": nonce, "salt": salt};
+  File outputFile = File('config.json');
+  outputFile.writeAsString(jsonEncode(config));
+  return config;
 }
 
 void main(List<String> arguments) async {
@@ -212,6 +209,8 @@ void main(List<String> arguments) async {
   var key = await keygen(password, salt);
   var nonce = await nonceGen();
 
+  print(exportConfig(bytesToHex(nonce), bytesToHex(salt)));
+
   await cipher(
     Directory(input),
     Directory(output),
@@ -221,10 +220,11 @@ void main(List<String> arguments) async {
     true,
   );
 
+  var key_two = await keygen(password, salt);
   await cipher(
     Directory(output),
     Directory("output"),
-    key.extractBytes(),
+    key_two.extractBytes(),
     nonce,
     0,
     false,
