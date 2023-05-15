@@ -32,6 +32,9 @@ dependencies:
     flutter_rating_bar: ^4.0.1
     intl: ^0.17.0
     animations: ^2.0.3
+    args: ^2.4.0
+    path: ^1.8.2
+    sodium: ^1.0.18
 
 dev_dependencies:
     flutter_test:
