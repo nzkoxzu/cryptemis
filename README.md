@@ -48,8 +48,8 @@ Here are the required dependencies :
 - [x] Set custom logo
 - [x] Implement Dashboard UI
 - [ ] Implement Dart POC
-  - [ ] Folder encryption
-  - [ ] File name anonymization
+  - [x] Folder encryption
+  - [x] File name anonymization
   - [ ] Battle-tested app
 - [ ] Make interaction between DART and UI  
 - [x] README.md update
