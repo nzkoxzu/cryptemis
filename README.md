@@ -55,15 +55,3 @@ Here are the required dependencies :
 - [x] README.md update
 
 
-
-# Layered encryption and decryption processus :
-
-### Encryption :
-
-![image](https://user-images.githubusercontent.com/79084290/227641238-ec4fa01b-415b-4f4d-952c-2c3c32832643.png)
-
-### Decryption :
-
-![image](https://user-images.githubusercontent.com/79084290/227642276-8c652d3f-5699-4455-aea1-67be536f17a4.png)
-
-

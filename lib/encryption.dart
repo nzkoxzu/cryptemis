@@ -4,12 +4,16 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:args/args.dart';
 import 'package:path/path.dart' as path;
+
+import 'package:crypto/crypto.dart';
+
 // required imports
 import 'dart:ffi';
 import 'package:sodium/sodium.dart';
 
 // load the dynamic library into dart
-final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so');
+//final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so');
+final libsodium = DynamicLibrary.open('libsodium.dll');
 
 String getPath(String path, String name) {
   var index = path.indexOf(name);
@@ -125,7 +129,20 @@ Future<void> cipher(
   try {
     await directories(input, output);
     await files(input, output, key, nonce, version, cipher);
+    if (cipher) {
+      Directory directory = output;
+      Map<String, dynamic> structure =
+          await exploreDirectory(directory, directory.path, isRoot: true);
+      File outputFile = File('output.json');
+      await outputFile.writeAsString(jsonEncode(structure));
+    } else {
+      File inputFile = File('output.json');
+      String jsonString = await inputFile.readAsString();
+      Map<String, dynamic> structure = jsonDecode(jsonString);
+      await restoreOriginalNames(output.path, structure);
+    }
   } catch (e) {
+    print('Error: $e');
     throw Exception("whoops");
   }
 }
@@ -180,11 +197,66 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-Map exportConfig(String nonce, String salt){
-  var config = {"nonce": nonce, "salt": salt};
-  File outputFile = File('config.json');
-  outputFile.writeAsString(jsonEncode(config));
-  return config;
+Future<String> exportNonce(List<int> nonce) async {
+  final hexNonce = bytesToHex(nonce);
+  return hexNonce;
+}
+
+Future<List<int>> importNonce(String hexNonce) async {
+  final nonce = hexToBytes(hexNonce);
+  return nonce;
+}
+
+Future<Map<String, dynamic>> exploreDirectory(
+    Directory directory, String basePath,
+    {bool isRoot = true}) async {
+  Map<String, dynamic> result = {};
+
+  List<FileSystemEntity> entities = await directory.list().toList();
+
+  for (FileSystemEntity entity in entities) {
+    String hash = sha256.convert(utf8.encode(entity.path)).toString();
+    String relativePath = path.relative(entity.path, from: basePath);
+
+    if (entity is File) {
+      // Remove any unnecessary directory parts from the path
+      relativePath = relativePath.split('\\').last;
+      result[hash] = {'path': relativePath, 'type': 'file'};
+      await entity.rename(path.join(entity.parent.path, hash));
+    } else if (entity is Directory) {
+      // If the current directory is not the root directory, remove the parent directory part from the path
+      if (!isRoot) {
+        relativePath = relativePath.split('\\').last;
+      }
+      result[hash] = {
+        'path': relativePath,
+        'type': 'directory',
+        'content': await exploreDirectory(entity, basePath, isRoot: false)
+      };
+      await entity.rename(path.join(entity.parent.path, hash));
+    }
+  }
+
+  return result;
+}
+
+Future<void> restoreOriginalNames(
+    String currentBasePath, Map<String, dynamic> structure) async {
+  for (String hash in structure.keys) {
+    Map<String, dynamic> item = structure[hash];
+    String originalPath = item['path'];
+    String itemType = item['type'];
+    String currentPath = currentBasePath + '\\' + hash;
+    String newOriginalPath = currentBasePath + '\\' + originalPath;
+
+    if (itemType == 'file') {
+      await File(currentPath).rename(newOriginalPath);
+    } else if (itemType == 'directory') {
+      await Directory(currentPath).rename(newOriginalPath);
+
+      await restoreOriginalNames(newOriginalPath, item['content']);
+    }
+  }
 }
 
 void main(List<String> arguments) async {
@@ -209,8 +281,6 @@ void main(List<String> arguments) async {
   var key = await keygen(password, salt);
   var nonce = await nonceGen();
 
-  print(exportConfig(bytesToHex(nonce), bytesToHex(salt)));
-
   await cipher(
     Directory(input),
     Directory(output),
@@ -220,11 +290,10 @@ void main(List<String> arguments) async {
     true,
   );
 
-  var key_two = await keygen(password, salt);
   await cipher(
     Directory(output),
     Directory("output"),
-    key_two.extractBytes(),
+    key.extractBytes(),
     nonce,
     0,
     false,
