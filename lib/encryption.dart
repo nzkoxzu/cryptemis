@@ -12,7 +12,7 @@ import 'dart:ffi';
 import 'package:sodium/sodium.dart';
 
 // load the dynamic library into dart
-final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so');
+final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so.23');
 //final libsodium = DynamicLibrary.open('libsodium.dll');
 
 String getPath(String path, String name) {
@@ -197,12 +197,14 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-Uint8List hexToBytesForSalt(String hex) {
-  final bytes = Uint8List(hex.length ~/ 2);
-  for (var i = 0; i < hex.length; i += 2) {
-    bytes[i ~/ 2] = int.parse(hex.substring(i, i + 2), radix: 16);
-  }
-  return bytes;
+Future<String> exportNonce(List<int> nonce) async {
+  final hexNonce = bytesToHex(nonce);
+  return hexNonce;
+}
+
+Future<List<int>> importNonce(String hexNonce) async {
+  final nonce = hexToBytes(hexNonce);
+  return nonce;
 }
 
 Future<Map<String, dynamic>> exploreDirectory(
@@ -218,13 +220,13 @@ Future<Map<String, dynamic>> exploreDirectory(
 
     if (entity is File) {
       // Remove any unnecessary directory parts from the path
-      relativePath = relativePath.split('\\').last;
+      relativePath = path.basename(relativePath);
       result[hash] = {'path': relativePath, 'type': 'file'};
       await entity.rename(path.join(entity.parent.path, hash));
     } else if (entity is Directory) {
       // If the current directory is not the root directory, remove the parent directory part from the path
       if (!isRoot) {
-        relativePath = relativePath.split('\\').last;
+        relativePath = path.basename(relativePath);
       }
       result[hash] = {
         'path': relativePath,
@@ -244,8 +246,8 @@ Future<void> restoreOriginalNames(
     Map<String, dynamic> item = structure[hash];
     String originalPath = item['path'];
     String itemType = item['type'];
-    String currentPath = currentBasePath + '\\' + hash;
-    String newOriginalPath = currentBasePath + '\\' + originalPath;
+    String currentPath = path.join(currentBasePath, hash);
+    String newOriginalPath = path.join(currentBasePath, originalPath);
 
     if (itemType == 'file') {
       await File(currentPath).rename(newOriginalPath);
@@ -255,27 +257,6 @@ Future<void> restoreOriginalNames(
       await restoreOriginalNames(newOriginalPath, item['content']);
     }
   }
-}
-
-Map exportConfig(String nonce, String salt){
-  var config = {"nonce": nonce, "salt": salt};
-  File outputFile = File('config.json');
-  outputFile.writeAsString(jsonEncode(config));
-  return config;
-}
-
-Future<List<int>> importNonce() async {
-  File inputFile = File('config.json');
-  var content = await inputFile.readAsString();
-  var data = json.decode(content);
-  return hexToBytes(data["nonce"]);
-}
-
-Future<Uint8List> importSalt() async {
-  File inputFile = File('config.json');
-  var content = await inputFile.readAsString();
-  var data = json.decode(content);
-  return hexToBytesForSalt(data["salt"]);
 }
 
 void main(List<String> arguments) async {
@@ -299,7 +280,6 @@ void main(List<String> arguments) async {
   var salt = await saltGen();
   var key = await keygen(password, salt);
   var nonce = await nonceGen();
-  print(exportConfig(bytesToHex(nonce), bytesToHex(salt)));
 
   await cipher(
     Directory(input),
@@ -310,16 +290,15 @@ void main(List<String> arguments) async {
     true,
   );
 
-  var key_2 = await keygen(password, await importSalt());
-
   await cipher(
     Directory(output),
     Directory("output"),
-    key_2.extractBytes(),
-    await importNonce(),
+    key.extractBytes(),
+    nonce,
     0,
     false,
   );
 
   key.dispose();
 }
+
