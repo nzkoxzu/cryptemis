@@ -12,8 +12,8 @@ import 'dart:ffi';
 import 'package:sodium/sodium.dart';
 
 // load the dynamic library into dart
-//final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so');
-final libsodium = DynamicLibrary.open('libsodium.dll');
+final libsodium = DynamicLibrary.open('/usr/lib/x86_64-linux-gnu/libsodium.so');
+//final libsodium = DynamicLibrary.open('libsodium.dll');
 
 String getPath(String path, String name) {
   var index = path.indexOf(name);
@@ -197,14 +197,12 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-Future<String> exportNonce(List<int> nonce) async {
-  final hexNonce = bytesToHex(nonce);
-  return hexNonce;
-}
-
-Future<List<int>> importNonce(String hexNonce) async {
-  final nonce = hexToBytes(hexNonce);
-  return nonce;
+Uint8List hexToBytesForSalt(String hex) {
+  final bytes = Uint8List(hex.length ~/ 2);
+  for (var i = 0; i < hex.length; i += 2) {
+    bytes[i ~/ 2] = int.parse(hex.substring(i, i + 2), radix: 16);
+  }
+  return bytes;
 }
 
 Future<Map<String, dynamic>> exploreDirectory(
@@ -259,6 +257,27 @@ Future<void> restoreOriginalNames(
   }
 }
 
+Map exportConfig(String nonce, String salt){
+  var config = {"nonce": nonce, "salt": salt};
+  File outputFile = File('config.json');
+  outputFile.writeAsString(jsonEncode(config));
+  return config;
+}
+
+Future<List<int>> importNonce() async {
+  File inputFile = File('config.json');
+  var content = await inputFile.readAsString();
+  var data = json.decode(content);
+  return hexToBytes(data["nonce"]);
+}
+
+Future<Uint8List> importSalt() async {
+  File inputFile = File('config.json');
+  var content = await inputFile.readAsString();
+  var data = json.decode(content);
+  return hexToBytesForSalt(data["salt"]);
+}
+
 void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('input', abbr: 'i')
@@ -280,6 +299,7 @@ void main(List<String> arguments) async {
   var salt = await saltGen();
   var key = await keygen(password, salt);
   var nonce = await nonceGen();
+  print(exportConfig(bytesToHex(nonce), bytesToHex(salt)));
 
   await cipher(
     Directory(input),
@@ -290,11 +310,13 @@ void main(List<String> arguments) async {
     true,
   );
 
+  var key_2 = await keygen(password, await importSalt());
+
   await cipher(
     Directory(output),
     Directory("output"),
-    key.extractBytes(),
-    nonce,
+    key_2.extractBytes(),
+    await importNonce(),
     0,
     false,
   );
