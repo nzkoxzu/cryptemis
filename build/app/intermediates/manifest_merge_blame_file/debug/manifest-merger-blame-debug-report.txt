@@ -6,26 +6,26 @@
 6
 7    <uses-sdk
 8        android:minSdkVersion="16"
-9        android:targetSdkVersion="31" />
+9        android:targetSdkVersion="33" />
 10    <!--
 11         The INTERNET permission is required for development. Specifically,
 12         the Flutter tool needs it to communicate with the running application
 13         to allow setting breakpoints, to provide hot reload, etc.
 14    -->
 15    <uses-permission android:name="android.permission.INTERNET" />
-15-->/home/myadmin/Documents/file_manager/lib/android/app/src/debug/AndroidManifest.xml:7:5-66
-15-->/home/myadmin/Documents/file_manager/lib/android/app/src/debug/AndroidManifest.xml:7:22-64
+15-->/home/pc/Bureau/cryptemis/android/app/src/debug/AndroidManifest.xml:7:5-66
+15-->/home/pc/Bureau/cryptemis/android/app/src/debug/AndroidManifest.xml:7:22-64
 16    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-16-->/home/myadmin/Documents/file_manager/lib/android/app/src/main/AndroidManifest.xml:3:5-80
-16-->/home/myadmin/Documents/file_manager/lib/android/app/src/main/AndroidManifest.xml:3:22-78
+16-->/home/pc/Bureau/cryptemis/android/app/src/main/AndroidManifest.xml:3:5-80
+16-->/home/pc/Bureau/cryptemis/android/app/src/main/AndroidManifest.xml:3:22-78
 17    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-17-->/home/myadmin/Documents/file_manager/lib/android/app/src/main/AndroidManifest.xml:4:5-79
-17-->/home/myadmin/Documents/file_manager/lib/android/app/src/main/AndroidManifest.xml:4:22-77
+17-->/home/pc/Bureau/cryptemis/android/app/src/main/AndroidManifest.xml:4:5-79
+17-->/home/pc/Bureau/cryptemis/android/app/src/main/AndroidManifest.xml:4:22-77
 18
 19    <application
 20        android:name="android.app.Application"
 21        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-21-->[androidx.core:core:1.6.0] /home/myadmin/.gradle/caches/transforms-3/acbce933e4b464a5224ed377a62db1f5/transformed/core-1.6.0/AndroidManifest.xml:24:18-86
+21-->[androidx.core:core:1.6.0] /home/pc/.gradle/caches/transforms-3/acbce933e4b464a5224ed377a62db1f5/transformed/core-1.6.0/AndroidManifest.xml:24:18-86
 22        android:debuggable="true"
 23        android:icon="@mipmap/ic_launcher"
 24        android:label="lib"
@@ -64,17 +64,17 @@
 57            android:value="2" />
 58
 59        <uses-library
-59-->[androidx.window:window:1.0.0-beta04] /home/myadmin/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:25:9-27:40
+59-->[androidx.window:window:1.0.0-beta04] /home/pc/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:25:9-27:40
 60            android:name="androidx.window.extensions"
-60-->[androidx.window:window:1.0.0-beta04] /home/myadmin/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:26:13-54
+60-->[androidx.window:window:1.0.0-beta04] /home/pc/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:26:13-54
 61            android:required="false" />
-61-->[androidx.window:window:1.0.0-beta04] /home/myadmin/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:27:13-37
+61-->[androidx.window:window:1.0.0-beta04] /home/pc/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:27:13-37
 62        <uses-library
-62-->[androidx.window:window:1.0.0-beta04] /home/myadmin/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:28:9-30:40
+62-->[androidx.window:window:1.0.0-beta04] /home/pc/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:28:9-30:40
 63            android:name="androidx.window.sidecar"
-63-->[androidx.window:window:1.0.0-beta04] /home/myadmin/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:29:13-51
+63-->[androidx.window:window:1.0.0-beta04] /home/pc/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:29:13-51
 64            android:required="false" />
-64-->[androidx.window:window:1.0.0-beta04] /home/myadmin/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:30:13-37
+64-->[androidx.window:window:1.0.0-beta04] /home/pc/.gradle/caches/transforms-3/49bc944d29f70d45aa5add8e43e3247e/transformed/jetified-window-1.0.0-beta04/AndroidManifest.xml:30:13-37
 65    </application>
 66
 67</manifest>
