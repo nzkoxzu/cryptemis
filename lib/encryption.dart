@@ -40,29 +40,34 @@ Future<List<int>> sodiumCipher(
   List<int> nonce,
   bool cipher,
 ) async {
-  // initialize the sodium APIs
-  final sodium = await SodiumInit.init(libsodium);
-  var secureKey = SecureKey.fromList(sodium, Uint8List.fromList(key));
+  try {
+    // initialize the sodium APIs
+    final sodium = await SodiumInit.init(libsodium);
+    var secureKey = SecureKey.fromList(sodium, Uint8List.fromList(key));
 
-  Uint8List bytes;
-  if (cipher) {
-    // ciphers the data
-    bytes = sodium.crypto.secretBox.easy(
-      message: Uint8List.fromList(data),
-      nonce: Uint8List.fromList(nonce),
-      key: secureKey,
-    );
-  } else {
-    // deciphers the data
-    bytes = sodium.crypto.secretBox.openEasy(
-      cipherText: Uint8List.fromList(data),
-      nonce: Uint8List.fromList(nonce),
-      key: secureKey,
-    );
+    Uint8List bytes;
+    if (cipher) {
+      // ciphers the data
+      bytes = sodium.crypto.secretBox.easy(
+        message: Uint8List.fromList(data),
+        nonce: Uint8List.fromList(nonce),
+        key: secureKey,
+      );
+    } else {
+      // deciphers the data
+      bytes = sodium.crypto.secretBox.openEasy(
+        cipherText: Uint8List.fromList(data),
+        nonce: Uint8List.fromList(nonce),
+        key: secureKey,
+      );
+    }
+    // Since these keys wrap native memory, it is mandatory that you dispose of them after you are done with a key, as otherwise they will leak memory.
+    secureKey.dispose();
+    return bytes;
+  } catch (e) {
+    print('Error: $e');
+    throw Exception("whoops");
   }
-  // Since these keys wrap native memory, it is mandatory that you dispose of them after you are done with a key, as otherwise they will leak memory.
-  secureKey.dispose();
-  return bytes;
 }
 
 Future<List<int>> tacos(
@@ -86,34 +91,43 @@ Future<void> files(
   int version,
   bool cipher,
 ) async {
-  var fileStructure = input.list(recursive: true, followLinks: false);
-  await for (var entity in fileStructure) {
-    var isFile = await FileSystemEntity.isFile(entity.path);
-    if (isFile) {
-      var filename = getPath(entity.path, input.path);
-      var file = File(entity.path);
-      var newFile = File(output.path + filename);
+  try {
+    var fileStructure = input.list(recursive: true, followLinks: false);
+    await for (var entity in fileStructure) {
+      var isFile = await FileSystemEntity.isFile(entity.path);
+      
+      if (isFile) {
+        var filename = getPath(entity.path, input.path);
+        var file = File(entity.path);
+        var newFile = File(output.path + filename);
+        if (filename == "/.structure" || filename == "/.cryptemis") {
+          continue;
+        }
+        if (await newFile.exists()) {
+          await newFile.delete();
+        }
 
-      if (await newFile.exists()) {
-        await newFile.delete();
+        var readStream = file.openRead();
+        var writeStream = newFile.openWrite();
+
+        var cipherStream = StreamTransformer<List<int>, List<int>>.fromHandlers(
+            handleData: (data, sink) async {
+          List<int> transformed = await tacos(
+            key,
+            data,
+            nonce,
+            version,
+            cipher,
+          );
+          sink.add(transformed);
+        });
+        await readStream.transform(cipherStream).pipe(writeStream);
+        await writeStream.close();
       }
-      await newFile.create(recursive: true);
-      var readStream = file.openRead();
-      var writeStream = newFile.openWrite();
-      var cipherStream = StreamTransformer<List<int>, List<int>>.fromHandlers(
-          handleData: (data, sink) async {
-        List<int> transformed = await tacos(
-          key,
-          data,
-          nonce,
-          version,
-          cipher,
-        );
-        sink.add(transformed);
-      });
-      await readStream.transform(cipherStream).pipe(writeStream);
-      await writeStream.close();
     }
+  } catch (e) {
+    print('Error: $e');
+    throw Exception("whoops");
   }
 }
 
@@ -132,10 +146,11 @@ Future<void> cipher(
       Directory directory = output;
       Map<String, dynamic> structure =
           await exploreDirectory(directory, directory.path, isRoot: true);
-      File outputFile = File('output.json');
+      File outputFile = File('.structure');
+      await outputFile.create();
       await outputFile.writeAsString(jsonEncode(structure));
     } else {
-      File inputFile = File('output.json');
+      File inputFile = File('.structure');
       String jsonString = await inputFile.readAsString();
       Map<String, dynamic> structure = jsonDecode(jsonString);
       await restoreOriginalNames(output.path, structure);
@@ -218,6 +233,9 @@ Future<Map<String, dynamic>> exploreDirectory(
     if (entity is File) {
       // Remove any unnecessary directory parts from the path
       relativePath = path.basename(relativePath);
+      if (relativePath == ".cryptemis" || relativePath == ".structure") {
+        continue;
+      }
       result[hash] = {'path': relativePath, 'type': 'file'};
       await entity.rename(path.join(entity.parent.path, hash));
     } else if (entity is Directory) {
@@ -258,20 +276,20 @@ Future<void> restoreOriginalNames(
 
 Map exportConfig(String nonce, String salt){
   var config = {"nonce": nonce, "salt": salt};
-  File outputFile = File('config.json');
+  File outputFile = File('.cryptemis');
   outputFile.writeAsString(jsonEncode(config));
   return config;
 }
 
 Future<List<int>> importNonce() async {
-  File inputFile = File('config.json');
+  File inputFile = File('.cryptemis');
   var content = await inputFile.readAsString();
   var data = json.decode(content);
   return hexToBytes(data["nonce"]);
 }
 
 Future<Uint8List> importSalt() async {
-  File inputFile = File('config.json');
+  File inputFile = File('.cryptemis');
   var content = await inputFile.readAsString();
   var data = json.decode(content);
   return hexToBytesForSalt(data["salt"]);
@@ -281,6 +299,7 @@ void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('input', abbr: 'i')
     ..addOption('output', abbr: 'o')
+    ..addOption('decipher', abbr: 'd')
     ..addOption('password', abbr: 'p');
 
   ArgResults args = parser.parse(arguments);
@@ -289,30 +308,33 @@ void main(List<String> arguments) async {
     throw Exception('input not found');
   }
 
-  var input = args['input'];
-  var output = args['output'];
+  Directory input = Directory(args['input']);
+  Directory output = Directory(args['output']);
+  Directory decipher = Directory(args['decipher']);
+  output.create();
   var password = Int8List.fromList(args['password'].codeUnits);
-  //FIXME absolute path vs relative
-  print(input + " " + output);
 
   var salt = await saltGen();
   var key = await keygen(password, salt);
   var nonce = await nonceGen();
+  exportConfig(bytesToHex(nonce), bytesToHex(salt));
 
   await cipher(
-    Directory(input),
-    Directory(output),
+    input,
+    output,
     key.extractBytes(),
     nonce,
     0,
     true,
   );
 
+  var key_two = await keygen(password, await importSalt());
+
   await cipher(
-    Directory(output),
-    Directory("output"),
+    output,
+    decipher,
     key.extractBytes(),
-    nonce,
+    await importNonce(),
     0,
     false,
   );
