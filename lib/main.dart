@@ -21,14 +21,13 @@ class _MyAppState extends State<MyApp> {
       home: HomePage(),
     );
     
-  }
-  
-  
+  } 
 }
 
 class HomePage extends StatelessWidget {
   final FileManagerController controller = FileManagerController();
 
+// Fonction d'upload de fichiers
 void fabPressed(BuildContext context) async {
   try {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -36,28 +35,23 @@ void fabPressed(BuildContext context) async {
       File file = File(result.files.single.path!);
       String fileName = result.files.single.name;
 
-      // Fichier sélectionné, vous pouvez maintenant l'uploader où vous le souhaitez
-      // file contient le fichier sélectionné
-      // fileName contient le nom du fichier avec son extension
+      // Fichier sélectionné, on peut handle le fichier comme on veut
+      // - file contient le fichier sélectionné
+      // - fileName contient le nom du fichier avec son extension
 
-      // Exemple : Sauvegarder le fichier dans le répertoire d'application
+      // Upload le fichier dans le dossier reservé à Cryptemis
       Directory appDirectory = await getApplicationDocumentsDirectory();
-      String filePath = '${appDirectory.path}/$fileName';
+      String filePath = '${controller.getCurrentPath}/$fileName';
       await file.copy(filePath);
-
-      // Vous pouvez également utiliser le chemin du fichier pour effectuer d'autres opérations d'upload ou de traitement selon vos besoins
-
-      // Ici, nous imprimons simplement le chemin dans la console
-      print('Chemin du fichier : $filePath');
     }
   } catch (e) {
-    print('Erreur lors de la sélection du fichier : $e');
-    // Gérez les erreurs ici
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating folder: $e'),
+        ),
+      );
   }
 }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -70,14 +64,17 @@ void fabPressed(BuildContext context) async {
             child: Scaffold(
               appBar: AppBar(
                 actions: [
+                  // IconButton Créer un dossier
                   IconButton(
                     onPressed: () => createFolder(context),
                     icon: Icon(Icons.create_new_folder_outlined),
                   ),
+                  // IconButton Filtrer par
                   IconButton(
                     onPressed: () => sort(context),
                     icon: Icon(Icons.sort_rounded),
                   ),
+                  // IconButton Chiffrement/Déchiffrement (temporaire pour debug)
                   IconButton(
                     onPressed: () => selectStorage(context),
                     icon: Icon(Icons.sd_storage_rounded),
@@ -87,6 +84,7 @@ void fabPressed(BuildContext context) async {
                   valueListenable: controller.titleNotifier,
                   builder: (context, title, _) => Text(title),
                 ),
+                // IconButton Retour (goToParentDirectory)
                 leading: IconButton(
                   icon: Icon(Icons.arrow_back),
                   onPressed: () async {
@@ -113,35 +111,22 @@ void fabPressed(BuildContext context) async {
                             subtitle: subtitle(entity),
                             onTap: () async {
                               if (FileManager.isDirectory(entity)) {
-                                // open the folder
+                                // ouvre le dossier
                                 controller.openDirectory(entity);
     
-                                // delete a folder
+                                // Utile pour la suite du projet
+                                // supprimer un dossier
                                 // await entity.delete(recursive: true);
     
-                                // rename a folder
+                                // renommer un dossier 
                                 // await entity.rename("newPath");
     
-                                // Check weather folder exists
+                                // Check si un dossier existe
                                 // entity.exists();
-    
-                                // get date of file
-                                // DateTime date = (await entity.stat()).modified;
+
                               } else {
-                                // delete a file
+                                // supprimer un fichier
                                 // await entity.delete();
-    
-                                // rename a file
-                                // await entity.rename("newPath");
-    
-                                // Check weather file exists
-                                // entity.exists();
-    
-                                // get date of file
-                                // DateTime date = (await entity.stat()).modified;
-    
-                                // get the size of the file
-                                // int size = (await entity.stat()).size;
                               }
                             },
                           ),
@@ -152,10 +137,11 @@ void fabPressed(BuildContext context) async {
                 ),
               ),
               floatingActionButton: FloatingActionButton(
+                // IconButton Upload de fichiers
                 child: Icon(Icons.add_circle_outline),
                 onPressed: () {
-    fabPressed(context);
-  },
+                                fabPressed(context);
+                              },
               ),
             ),
           );
@@ -192,6 +178,7 @@ void fabPressed(BuildContext context) async {
     );
   }
 
+// Fonction de selection de la source de stockage (A SUPPRIMER)
   selectStorage(BuildContext context) {
     showDialog(
       context: context,
@@ -227,6 +214,7 @@ void fabPressed(BuildContext context) async {
     );
   }
 
+// Fonction de tri (sort by)
   sort(BuildContext context) async {
     showDialog(
       context: context,
@@ -267,6 +255,7 @@ void fabPressed(BuildContext context) async {
     );
   }
 
+// Fonction de création de fichiers
 createFolder(BuildContext context) async {
   showDialog(
     context: context,
@@ -286,19 +275,17 @@ createFolder(BuildContext context) async {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    // Create Folder
+                    // Créé le fichier
                     await FileManager.createFolder(controller.getCurrentPath, folderName.text);
-                    // Open Created Folder
+                    // Ouvre le fichier
                     controller.setCurrentPath = controller.getCurrentPath + "/" + folderName.text;
 
-                    // Get the application-specific directory
-                    final appDir = await path_provider.getApplicationDocumentsDirectory();
-                    // Create a file in the application-specific directory
-                    final file = File('${appDir.path}/test.lol');
-                    await file.writeAsString('Contenu du fichier');
+
+                    // Crée un fichier encryption.cryptemis dans le dossier qui vient d'être créé
+                    final file = File('${controller.getCurrentPath}/encryption.cryptemis');
+                    await file.writeAsString('jecris du contenu dans mon fichier encryption.cryptemis');
 
                   } catch (e) {
-                    // Show error message
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error creating folder: $e'),
