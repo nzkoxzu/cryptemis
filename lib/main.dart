@@ -1,6 +1,6 @@
 import 'dart:io';
-
-import 'package:file_manager/file_manager.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'file_manager.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -18,102 +18,126 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: HomePage(),
     );
+    
   }
+  
+  
 }
 
 class HomePage extends StatelessWidget {
   final FileManagerController controller = FileManagerController();
-  
+
+    void fabPressed() {
+    // Add your desired functionality here
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ControlBackButton(
-      controller: controller,
-      child: Scaffold(
-          appBar: AppBar(
-            actions: [
-              IconButton(
-                onPressed: () => createFolder(context),
-                icon: Icon(Icons.create_new_folder_outlined),
+    return FutureBuilder(
+      future: path_provider.getApplicationDocumentsDirectory(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return ControlBackButton(
+            controller: controller,
+            child: Scaffold(
+              appBar: AppBar(
+                actions: [
+                  IconButton(
+                    onPressed: () => createFolder(context),
+                    icon: Icon(Icons.create_new_folder_outlined),
+                  ),
+                  IconButton(
+                    onPressed: () => sort(context),
+                    icon: Icon(Icons.sort_rounded),
+                  ),
+                  IconButton(
+                    onPressed: () => selectStorage(context),
+                    icon: Icon(Icons.sd_storage_rounded),
+                  )
+                ],
+                title: ValueListenableBuilder<String>(
+                  valueListenable: controller.titleNotifier,
+                  builder: (context, title, _) => Text(title),
+                ),
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () async {
+                    await controller.goToParentDirectory();
+                  },
+                ),
               ),
-              IconButton(
-                onPressed: () => sort(context),
-                icon: Icon(Icons.sort_rounded),
-              ),
-              IconButton(
-                onPressed: () => selectStorage(context),
-                icon: Icon(Icons.sd_storage_rounded),
-              )
-            ],
-            title: ValueListenableBuilder<String>(
-              valueListenable: controller.titleNotifier,
-              builder: (context, title, _) => Text(title),
-            ),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () async {
-                await controller.goToParentDirectory();
-              },
-            ),
-          ),
-          body: Container(
-            margin: EdgeInsets.all(10),
-            child: FileManager(
-              controller: controller,
-              builder: (context, snapshot) {
-                final List<FileSystemEntity> entities = snapshot;
-                return ListView.builder(
-                  itemCount: entities.length,
-                  itemBuilder: (context, index) {
-                    FileSystemEntity entity = entities[index];
-                    return Card(
-                      child: ListTile(
-                        leading: FileManager.isFile(entity)
-                            ? Icon(Icons.feed_outlined)
-                            : Icon(Icons.folder),
-                        title: Text(FileManager.basename(entity)),
-                        subtitle: subtitle(entity),
-                        onTap: () async {
-                          if (FileManager.isDirectory(entity)) {
-                            // open the folder
-                            controller.openDirectory(entity);
+              body: Container(
+                margin: EdgeInsets.all(10),
+                child: FileManager(
+                  controller: controller,
+                  builder: (context, snapshot) {
+                    final List<FileSystemEntity> entities = snapshot;
+                    return ListView.builder(
+                      itemCount: entities.length,
+                      itemBuilder: (context, index) {
+                        FileSystemEntity entity = entities[index];
+                        return Card(
+                          child: ListTile(
+                            leading: FileManager.isFile(entity)
+                                ? Icon(Icons.feed_outlined)
+                                : Icon(Icons.folder),
+                            title: Text(FileManager.basename(entity)),
+                            subtitle: subtitle(entity),
+                            onTap: () async {
+                              if (FileManager.isDirectory(entity)) {
+                                // open the folder
+                                controller.openDirectory(entity);
     
-                            // delete a folder
-                            // await entity.delete(recursive: true);
+                                // delete a folder
+                                // await entity.delete(recursive: true);
     
-                            // rename a folder
-                            // await entity.rename("newPath");
+                                // rename a folder
+                                // await entity.rename("newPath");
     
-                            // Check weather folder exists
-                            // entity.exists();
+                                // Check weather folder exists
+                                // entity.exists();
     
-                            // get date of file
-                            // DateTime date = (await entity.stat()).modified;
-                          } else {
-                            // delete a file
-                            // await entity.delete();
+                                // get date of file
+                                // DateTime date = (await entity.stat()).modified;
+                              } else {
+                                // delete a file
+                                // await entity.delete();
     
-                            // rename a file
-                            // await entity.rename("newPath");
+                                // rename a file
+                                // await entity.rename("newPath");
     
-                            // Check weather file exists
-                            // entity.exists();
+                                // Check weather file exists
+                                // entity.exists();
     
-                            // get date of file
-                            // DateTime date = (await entity.stat()).modified;
+                                // get date of file
+                                // DateTime date = (await entity.stat()).modified;
     
-                            // get the size of the file
-                            // int size = (await entity.stat()).size;
-                          }
-                        },
-                      ),
+                                // get the size of the file
+                                // int size = (await entity.stat()).size;
+                              }
+                            },
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
+                ),
+              ),
+              floatingActionButton: FloatingActionButton(
+                child: Icon(Icons.add_circle_outline),
+                onPressed: fabPressed,
+              ),
             ),
-          )),
+          );
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
     );
   }
+
 
 
   Widget subtitle(FileSystemEntity entity) {
@@ -213,42 +237,54 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  createFolder(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        TextEditingController folderName = TextEditingController();
-        return Dialog(
-          child: Container(
-            padding: EdgeInsets.all(10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: TextField(
-                    controller: folderName,
-                  ),
+createFolder(BuildContext context) async {
+  showDialog(
+    context: context,
+    builder: (context) {
+      TextEditingController folderName = TextEditingController();
+      return Dialog(
+        child: Container(
+          padding: EdgeInsets.all(10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: TextField(
+                  controller: folderName,
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      // Create Folder
-                      await FileManager.createFolder(
-                          controller.getCurrentPath, folderName.text);
-                      // Open Created Folder
-                      controller.setCurrentPath =
-                          controller.getCurrentPath + "/" + folderName.text;
-                    } catch (e) {}
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    // Create Folder
+                    await FileManager.createFolder(controller.getCurrentPath, folderName.text);
+                    // Open Created Folder
+                    controller.setCurrentPath = controller.getCurrentPath + "/" + folderName.text;
 
-                    Navigator.pop(context);
-                  },
-                  child: Text('Create Folder'),
-                )
-              ],
-            ),
+                    // Get the application-specific directory
+                    final appDir = await path_provider.getApplicationDocumentsDirectory();
+                    // Create a file in the application-specific directory
+                    final file = File('${appDir.path}/test.lol');
+                    await file.writeAsString('Contenu du fichier');
+
+                  } catch (e) {
+                    // Show error message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error creating folder: $e'),
+                      ),
+                    );
+                  }
+                  Navigator.pop(context);
+                },
+                child: Text('Create Folder'),
+              )
+            ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 }

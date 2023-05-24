@@ -247,7 +247,8 @@ class FileManager extends StatefulWidget {
   /// returns an empty list if there is no storage
   static Future<List<Directory>> getStorageList() async {
     if (Platform.isAndroid) {
-      List<Directory> storages = (await getExternalStorageDirectories())!;
+      Directory storage = await getApplicationDocumentsDirectory();
+      List<Directory> storages = [storage];
       storages = storages.map((Directory e) {
         final List<String> splitedPath = e.path.split("/");
         return Directory(splitedPath
@@ -278,17 +279,43 @@ class _FileManagerState extends State<FileManager> {
     widget.controller.dispose();
     super.dispose();
   }
+////////////////////////////////////////////////////////////////
+///
+///
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.controller.getCurrentPath.isNotEmpty) {
-      currentDir = Future.value([widget.controller.getCurrentDirectory]);
-    } else {
-      currentDir = FileManager.getStorageList();
-    }
+
+
+
+
+
+
+@override
+void initState() {
+  super.initState();
+  if (widget.controller.getCurrentPath.isNotEmpty) {
+    currentDir = Future.value([widget.controller.getCurrentDirectory]);
+  } else {
+    currentDir = getApplicationDocumentsDirectory().then((directory) {
+      return _createDirectory(directory);
+    }).catchError((error) {
+      throw ("Erreur lors de la création du dossier : $error");
+    });
   }
+}
 
+Future<List<Directory>> _createDirectory(Directory directory) async {
+  try {
+    final exists = await directory.exists();
+    if (!exists) {
+      await directory.create(recursive: true);
+    }
+    return [directory]; // Wrap the directory in a list and return
+  } catch (error) {
+    throw Exception("Erreur lors de la création du dossier : $error");
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Directory>?>(
