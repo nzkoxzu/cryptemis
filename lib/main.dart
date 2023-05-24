@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:path_provider/path_provider.dart';
 import 'file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,9 +29,35 @@ class _MyAppState extends State<MyApp> {
 class HomePage extends StatelessWidget {
   final FileManagerController controller = FileManagerController();
 
-    void fabPressed() {
-    // Add your desired functionality here
+void fabPressed(BuildContext context) async {
+  try {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String fileName = result.files.single.name;
+
+      // Fichier sélectionné, vous pouvez maintenant l'uploader où vous le souhaitez
+      // file contient le fichier sélectionné
+      // fileName contient le nom du fichier avec son extension
+
+      // Exemple : Sauvegarder le fichier dans le répertoire d'application
+      Directory appDirectory = await getApplicationDocumentsDirectory();
+      String filePath = '${appDirectory.path}/$fileName';
+      await file.copy(filePath);
+
+      // Vous pouvez également utiliser le chemin du fichier pour effectuer d'autres opérations d'upload ou de traitement selon vos besoins
+
+      // Ici, nous imprimons simplement le chemin dans la console
+      print('Chemin du fichier : $filePath');
+    }
+  } catch (e) {
+    print('Erreur lors de la sélection du fichier : $e');
+    // Gérez les erreurs ici
   }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +153,9 @@ class HomePage extends StatelessWidget {
               ),
               floatingActionButton: FloatingActionButton(
                 child: Icon(Icons.add_circle_outline),
-                onPressed: fabPressed,
+                onPressed: () {
+    fabPressed(context);
+  },
               ),
             ),
           );
