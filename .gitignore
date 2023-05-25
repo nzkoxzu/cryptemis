@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+/.git/objects/pack/*
+
+
+>>>>>>> main
 # Miscellaneous
 *.class
 *.lock
@@ -133,5 +139,9 @@ app.*.symbols
 !.vscode/settings.json
 
 
+<<<<<<< HEAD
 # Custom 
 pubspec.lock
+=======
+
+>>>>>>> main
