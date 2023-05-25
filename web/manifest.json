@@ -1,6 +1,6 @@
 {
-    "name": "cryptemis",
-    "short_name": "cryptemis",
+    "name": "lib",
+    "short_name": "lib",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
