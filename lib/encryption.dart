@@ -7,6 +7,9 @@ Cipher callAlg(String algchoice){
   if (algchoice == "Xchacha20") {
     final alg = Xchacha20(macAlgorithm: Hmac.sha256());
     return alg;
+  } else if (algchoice == "AES-CTR-256bits") {
+    final alg = AesCtr.with256bits(macAlgorithm: Hmac.sha256());
+    return alg;
   } else {
     final alg = Xchacha20(macAlgorithm: Hmac.sha256());
     return alg;
@@ -126,7 +129,7 @@ Future<String> fileHierarchy(String directory) async {
 //  exportConfig(bytesToHex(nonce), bytesToHex(salt), map, directory);
 //}
 
-void main(List<String> arguments) async {
+void main() async {
   final alg = callAlg("Xchacha20");
   final nonce = await nonceGen(alg);
   final salt = await nonceGen(alg);
