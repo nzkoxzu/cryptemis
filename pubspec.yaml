@@ -34,8 +34,8 @@ dependencies:
     animations: ^2.0.3
     args: ^2.4.0
     path: ^1.8.2
-    sodium: ^1.0.18
-    crypto: ^3.0.3
+    cryptography: ^2.5.0
+    cryptography-flutter: ^2.3.0
 
 dev_dependencies:
     flutter_test:
