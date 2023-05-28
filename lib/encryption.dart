@@ -1,84 +1,7 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:convert';
-import 'package:args/args.dart';
-import 'package:path/path.dart' as path;
 import 'package:cryptography/cryptography.dart';
-
-String getPath(String path, String name) {
-  var index = path.indexOf(name);
-  if (index == -1) {
-    throw 'getpath failed';
-  }
-  return path.substring(index + name.length);
-}
-
-Future<void> directories(Directory input, Directory output) async {
-  var structure = input.list(recursive: true, followLinks: false);
-  await for (var entity in structure) {
-    var isDirectory = await FileSystemEntity.isDirectory(entity.path);
-    if (isDirectory) {
-      var folderName = getPath(entity.path, input.path);
-      await Directory(output.path + folderName).create(recursive: true);
-    }
-  }
-}
-
-Future<List<int>> tacos(
-  List<int> key,
-  List<int> data,
-  List<int> nonce,
-  int version,
-  bool cipher,
-) async {
-  if (version == 0) {
-  }
-  throw Exception("no tacos");
-}
-
-Future<void> files(
-  Directory input,
-  Directory output,
-  List<int> key,
-  List<int> nonce,
-  int version,
-  bool cipher,
-) async {
-  try {
-  } catch (e) {
-    print('Error: $e');
-    throw Exception("whoops");
-  }
-}
-
-Future<void> cipher(
-  Directory input,
-  Directory output,
-  List<int> key,
-  List<int> nonce,
-  int version,
-  bool cipher,
-) async {
-  try {
-    await directories(input, output);
-    await files(input, output, key, nonce, version, cipher);
-  } catch (e) {
-    print('Error: $e');
-    throw Exception("whoops");
-  }
-}
-
-Future<SecretKey> keyGen(Cipher alg, List<int> password) async {
-  var key = await alg.newSecretKeyFromBytes(password);
-  return key;
-}
-
-Future<List<int>> nonceGen(Cipher alg) async {
-  // generate a nonce
-  var nonce = alg.newNonce();
-  return nonce;
-}
 
 Cipher callAlg(String algchoice){
   if (algchoice == "Xchacha20") {
@@ -90,6 +13,12 @@ Cipher callAlg(String algchoice){
   }
 }
 
+Future<List<int>> nonceGen(Cipher alg) async {
+  // generate a nonce
+  var nonce = alg.newNonce();
+  return nonce;
+}
+
 Future<List<int>> getHash(String password, List<int> salt) async {
   final algorithm = Sha256();
   List<int> values = [];
@@ -97,8 +26,12 @@ Future<List<int>> getHash(String password, List<int> salt) async {
     values.add(password.codeUnitAt(i));
   }
   final hash = await algorithm.hash(values+salt);
-  print(hash.bytes);
   return hash.bytes;
+}
+
+Future<SecretKey> keyGen(Cipher alg, List<int> password) async {
+  var key = await alg.newSecretKeyFromBytes(password);
+  return key;
 }
 
 String bytesToHex(List<int> bytes) {
@@ -117,33 +50,89 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-Map exportConfig(String nonce, String salt){
+void exportConfig(String nonce, String salt, String directory){
   var config = {"nonce": nonce, "salt": salt};
-  File outputFile = File('.cryptemis');
-  outputFile.writeAsString(jsonEncode(config));
-  return config;
+  if (directory == ""){
+    File file = File('.cryptemis');
+    file.writeAsString(jsonEncode(config));
+  } else {
+    File file = File(directory+'/.cryptemis');
+    file.writeAsString(jsonEncode(config));
+  }
+  return null;
 }
 
-Future<List<int>> importData(String data_to_import) async {
-  File inputFile = File('.cryptemis');
-  var content = await inputFile.readAsString();
-  var data = json.decode(content);
-  return hexToBytes(data[data_to_import]);
+Future<List<int>> importData(String data_to_import, String directory) async {
+  if (directory == ""){
+    File file = File('.cryptemis');
+    var content = await file.readAsString();
+    var data = json.decode(content);
+    return hexToBytes(data[data_to_import]);
+  } else {
+    File file = File(directory+'/.cryptemis');
+    var content = await file.readAsString();
+    var data = json.decode(content);
+    return hexToBytes(data[data_to_import]);
+  }
 }
+
+Future<String> fileHierarchy(String directory) async {
+  final dir = Directory(directory);
+  final List<FileSystemEntity> entities = await dir.list().toList();
+  print(entities);
+  return directory;
+}
+
+//void decipherDirectory(String algorithm, String password, String directory) async {
+//  final alg = callAlg(algorithm);
+//  final nonce = await importData("nonce", directory);
+//  final salt = await importData("salt", directory);
+//  final map = await importData("hierarchy", directory);
+//  final hash = await getHash(password, salt);
+//  final key = await keyGen(alg, hash);
+//}
+//
+//void cipherDirectory(String algorithm, String password, String directory) async {
+//  final alg = callAlg(algorithm);
+//  final nonce = await importData("nonce", directory);
+//  final salt = await importData("salt", directory);
+//  final hash = await getHash(password, salt);
+//  final key = await keyGen(alg, hash);
+//  final map = await importData("hierarchy", directory);
+//  final map_to_compare = await fileHierarchy(directory);
+//  if (map =! map_to_compare) {
+//    updateConfig(algorithm, password, directory);
+//  }
+//  final key = await keyGen(alg, password);
+//}
+//
+//void updateConfig(String algorithm, String password, String directory) async {
+//  final alg = callAlg(algorithm);
+//  final nonce = await importData("nonce", directory);
+//  final salt = await importData("salt", directory);
+//  final hash = await getHash(password, salt);
+//  final key = await keyGen(alg, hash);
+//  final map = await fileHierarchy(directory);
+//  exportConfig(bytesToHex(nonce), bytesToHex(salt), directory);
+//}
+//
+//void createConfig(String algorithm, String password, String directory) async {
+//  final alg = callAlg(algorithm);
+//  final nonce = await nonceGen(alg);
+//  final salt = await nonceGen(alg);
+//  final hash = await getHash(password, salt);
+//  final key = await keyGen(alg, hash);
+//  final map = await fileHierarchy(directory);
+//  exportConfig(bytesToHex(nonce), bytesToHex(salt), map, directory);
+//}
 
 void main(List<String> arguments) async {
-  final parser = ArgParser()
-    ..addOption('password', abbr: 'p');
-
-  ArgResults args = parser.parse(arguments);
-
   final alg = callAlg("Xchacha20");
   final nonce = await nonceGen(alg);
   final salt = await nonceGen(alg);
-  exportConfig(bytesToHex(nonce), bytesToHex(salt));
-  final password = await getHash(args['password'], salt);
+  exportConfig(bytesToHex(nonce), bytesToHex(salt), "");
+  final password = await getHash("LaMèreMichel", salt);
   final key = await keyGen(alg, password);
-  final password2 = await getHash(args['password'], await importData("salt"));
-  final key2 = await keyGen(alg, password);
+  final map = await fileHierarchy("../../cryptemis");
 }
 
