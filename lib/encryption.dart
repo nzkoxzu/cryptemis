@@ -53,8 +53,8 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-void exportConfig(String nonce, String salt, String directory){
-  var config = {"nonce": nonce, "salt": salt};
+void exportConfig(String nonce, String salt, String map, String directory){
+  var config = {"nonce": nonce, "salt": salt, "hierarchy": map};
   if (directory == ""){
     File file = File('.cryptemis');
     file.writeAsString(jsonEncode(config));
@@ -65,43 +65,84 @@ void exportConfig(String nonce, String salt, String directory){
   return null;
 }
 
-Future<List<int>> importData(String data_to_import, String directory) async {
+Future<String> importData(String data_to_import, String directory) async {
   if (directory == ""){
     File file = File('.cryptemis');
     var content = await file.readAsString();
     var data = json.decode(content);
-    return hexToBytes(data[data_to_import]);
+    return data[data_to_import];
   } else {
     File file = File(directory+'/.cryptemis');
     var content = await file.readAsString();
     var data = json.decode(content);
-    return hexToBytes(data[data_to_import]);
+    return data[data_to_import];
   }
 }
 
-Future<String> fileHierarchy(String directory) async {
-  final dir = Directory(directory);
-  final List<FileSystemEntity> entities = await dir.list().toList();
-  print(entities);
-  return directory;
+Future<Map<String, Map<String, String>>> fileHierarchy(String directoryPath) async {
+  final Map<String, Map<String, String>> files = {};
+
+  final Directory directory = Directory(directoryPath);
+  final List<FileSystemEntity> entities = directory.listSync();
+
+  final algorithm = Sha256();
+
+  for (final FileSystemEntity entity in entities) {
+    if (entity is File) {
+      List<int> values = [];
+      for (int i = 0; i < entity.path.length; i++) {
+        values.add(entity.path.codeUnitAt(i));
+      }
+      final data = await algorithm.hash(values);
+      final fileName = entity.uri.pathSegments.last;
+      if (fileName != '.cryptemis') {
+        files[fileName] = {entity.path: bytesToHex(data.bytes)};
+      }
+    } else if (entity is Directory) {
+      final subdirectoryFiles = await fileHierarchy(entity.path);
+      files.addAll(subdirectoryFiles);
+    }
+  }
+  return files;
+}
+
+//void cipherFile(Cipher alg, SecretKey key, List<int> nonce, String file_to_treat, String file_to_write) async {
+//}
+//
+//void decipherFile(Cipher alg, SecretKey key, List<int> nonce, String file_to_treat, String file_to_write) async {
+//}
+
+Future<SecretBox> cipherData(Cipher alg, SecretKey key, String data) async {
+  final ciphertext = await alg.encryptString(data, secretKey: key);
+  return ciphertext;
+}
+
+Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
+  List<int> secretbox = [];
+  for (int i = 0; i < msg.length; i++) {
+    secretbox.add(msg.codeUnitAt(i));
+  }
+  final data = await SecretBox.fromConcatenation(secretbox, nonceLength: alg.nonceLength, macLength: alg.macAlgorithm.macLength);
+  final cleartext = await alg.decryptString(data, secretKey: key);
+  return cleartext;
 }
 
 //void decipherDirectory(String algorithm, String password, String directory) async {
 //  final alg = callAlg(algorithm);
-//  final nonce = await importData("nonce", directory);
-//  final salt = await importData("salt", directory);
-//  final map = await importData("hierarchy", directory);
+//  final nonce = hexToBytes(await importData("nonce", directory));
+//  final salt = hexToBytes(await importData("salt", directory));
+//  final ciphermap = await importData("hierarchy", directory);
 //  final hash = await getHash(password, salt);
 //  final key = await keyGen(alg, hash);
 //}
 //
 //void cipherDirectory(String algorithm, String password, String directory) async {
 //  final alg = callAlg(algorithm);
-//  final nonce = await importData("nonce", directory);
-//  final salt = await importData("salt", directory);
+//  final nonce = hexToBytes(await importData("nonce", directory));
+//  final salt = hexToBytes(await importData("salt", directory));
 //  final hash = await getHash(password, salt);
 //  final key = await keyGen(alg, hash);
-//  final map = await importData("hierarchy", directory);
+//  final ciphermap = await importData("hierarchy", directory);
 //  final map_to_compare = await fileHierarchy(directory);
 //  if (map =! map_to_compare) {
 //    updateConfig(algorithm, password, directory);
@@ -109,14 +150,11 @@ Future<String> fileHierarchy(String directory) async {
 //  final key = await keyGen(alg, password);
 //}
 //
-//void updateConfig(String algorithm, String password, String directory) async {
+//void updateConfig(String algorithm, String nonce, String salt, String password, String map, String directory) async {
 //  final alg = callAlg(algorithm);
-//  final nonce = await importData("nonce", directory);
-//  final salt = await importData("salt", directory);
 //  final hash = await getHash(password, salt);
 //  final key = await keyGen(alg, hash);
-//  final map = await fileHierarchy(directory);
-//  exportConfig(bytesToHex(nonce), bytesToHex(salt), directory);
+//  exportConfig(bytesToHex(nonce), bytesToHex(salt), map, directory);
 //}
 //
 //void createConfig(String algorithm, String password, String directory) async {
@@ -130,12 +168,16 @@ Future<String> fileHierarchy(String directory) async {
 //}
 
 void main() async {
-  final alg = callAlg("Xchacha20");
+  final alg = callAlg("AES-CTR-256bits");
   final nonce = await nonceGen(alg);
   final salt = await nonceGen(alg);
-  exportConfig(bytesToHex(nonce), bytesToHex(salt), "");
   final password = await getHash("LaMèreMichel", salt);
   final key = await keyGen(alg, password);
-  final map = await fileHierarchy("../../cryptemis");
+  final map = await fileHierarchy("intro/");
+  final ciphermap = await cipherData(alg, key, json.encode(map));
+  exportConfig(bytesToHex(nonce), bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), "intro");
+  final map_from_file = await importData("hierarchy", "intro");
+  final clearmap = await decipherData(alg, key, map_from_file);
+  print(clearmap);
 }
 
