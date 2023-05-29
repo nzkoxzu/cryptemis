@@ -4,6 +4,9 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 
 Cipher callAlg(String algchoice){
+  /*
+  Allows user to select a prefered algorithm
+  */
   if (algchoice == "Xchacha20") {
     final alg = Xchacha20(macAlgorithm: Hmac.sha256());
     return alg;
@@ -17,12 +20,17 @@ Cipher callAlg(String algchoice){
 }
 
 Future<List<int>> nonceGen(Cipher alg) async {
-  // generate a nonce
+  /*
+  generate a nonce
+  */
   var nonce = alg.newNonce();
   return nonce;
 }
 
 Future<List<int>> getHash(String password, List<int> salt) async {
+  /*
+  generate a salted hash of the user's password
+  */
   final algorithm = Sha256();
   List<int> values = [];
   for (int i = 0; i < password.length; i++) {
@@ -33,11 +41,17 @@ Future<List<int>> getHash(String password, List<int> salt) async {
 }
 
 Future<SecretKey> keyGen(Cipher alg, List<int> password) async {
+  /*
+  generate a key from user's salted hash
+  */
   var key = await alg.newSecretKeyFromBytes(password);
   return key;
 }
 
 String bytesToHex(List<int> bytes) {
+  /*
+  Makes a string for the conf file
+  */
   final hexDigits = '0123456789ABCDEF';
   final chars = List<String>.from(
     bytes.map((byte) => hexDigits[(byte >> 4) & 0x0f] + hexDigits[byte & 0x0f]),
@@ -46,6 +60,9 @@ String bytesToHex(List<int> bytes) {
 }
 
 List<int> hexToBytes(String hex) {
+  /*
+  Makes a string from the conf file into usable data
+  */
   final bytes = <int>[];
   for (var i = 0; i < hex.length; i += 2) {
     bytes.add(int.parse(hex.substring(i, i + 2), radix: 16));
@@ -54,6 +71,9 @@ List<int> hexToBytes(String hex) {
 }
 
 void exportConfig(String nonce, String salt, String map, String directory){
+  /*
+  Exports the config
+  */
   var config = {"nonce": nonce, "salt": salt, "hierarchy": map};
   if (directory == ""){
     File file = File('.cryptemis');
@@ -66,6 +86,9 @@ void exportConfig(String nonce, String salt, String map, String directory){
 }
 
 Future<String> importData(String data_to_import, String directory) async {
+  /*
+  Import selected data from the config
+  */
   if (directory == ""){
     File file = File('.cryptemis');
     var content = await file.readAsString();
@@ -80,6 +103,9 @@ Future<String> importData(String data_to_import, String directory) async {
 }
 
 Future<Map<String, Map<String, String>>> fileHierarchy(String directoryPath) async {
+  /*
+  Gets the file hierarchy recursively
+  */
   final Map<String, Map<String, String>> files = {};
 
   final Directory directory = Directory(directoryPath);
@@ -113,11 +139,17 @@ Future<Map<String, Map<String, String>>> fileHierarchy(String directoryPath) asy
 //}
 
 Future<SecretBox> cipherData(Cipher alg, SecretKey key, String data) async {
+  /*
+  Cipher selected data for the config file
+  */
   final ciphertext = await alg.encryptString(data, secretKey: key);
   return ciphertext;
 }
 
 Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
+  /*
+  Deipher selected data from the config file
+  */
   List<int> secretbox = [];
   for (int i = 0; i < msg.length; i++) {
     secretbox.add(msg.codeUnitAt(i));
@@ -132,6 +164,7 @@ Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
 //  final nonce = hexToBytes(await importData("nonce", directory));
 //  final salt = hexToBytes(await importData("salt", directory));
 //  final ciphermap = await importData("hierarchy", directory);
+//  final map = await decipherData(alg, key, ciphermap);
 //  final hash = await getHash(password, salt);
 //  final key = await keyGen(alg, hash);
 //}
@@ -143,11 +176,12 @@ Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
 //  final hash = await getHash(password, salt);
 //  final key = await keyGen(alg, hash);
 //  final ciphermap = await importData("hierarchy", directory);
+//  final map = await decipherData(alg, key, ciphermap);
 //  final map_to_compare = await fileHierarchy(directory);
 //  if (map =! map_to_compare) {
-//    updateConfig(algorithm, password, directory);
+//    final ciphermap = await cipherData(alg, key, json.encode(map_to_compare));
+//    updateConfig(algorithm, password, new String.fromCharCodes(ciphermap.concatenation()), directory);
 //  }
-//  final key = await keyGen(alg, password);
 //}
 //
 //void updateConfig(String algorithm, String nonce, String salt, String password, String map, String directory) async {
@@ -164,7 +198,8 @@ Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
 //  final hash = await getHash(password, salt);
 //  final key = await keyGen(alg, hash);
 //  final map = await fileHierarchy(directory);
-//  exportConfig(bytesToHex(nonce), bytesToHex(salt), map, directory);
+//  final ciphermap = await cipherData(alg, key, json.encode(map));
+//  exportConfig(bytesToHex(nonce), bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), directory);
 //}
 
 void main() async {
