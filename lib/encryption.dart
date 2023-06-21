@@ -19,14 +19,6 @@ Cipher callAlg(String algchoice){
   }
 }
 
-Future<List<int>> nonceGen(Cipher alg) async {
-  /*
-  generate a nonce
-  */
-  var nonce = alg.newNonce();
-  return nonce;
-}
-
 Future<List<int>> getHash(String password, List<int> salt) async {
   /*
   generate a salted hash of the user's password
@@ -70,11 +62,11 @@ List<int> hexToBytes(String hex) {
   return bytes;
 }
 
-void exportConfig(String nonce, String salt, String map, String directory){
+void exportConfig(String alg, String salt, String map, String directory){
   /*
   Exports the config
   */
-  var config = {"nonce": nonce, "salt": salt, "hierarchy": map};
+  var config = {"algorithm": alg, "salt": salt, "hierarchy": map};
   if (directory == ""){
     File file = File('.cryptemis');
     file.writeAsString(jsonEncode(config));
@@ -132,11 +124,38 @@ Future<Map<String, Map<String, String>>> fileHierarchy(String directoryPath) asy
   return files;
 }
 
-//void cipherFile(Cipher alg, SecretKey key, List<int> nonce, String file_to_treat, String file_to_write) async {
-//}
-//
-//void decipherFile(Cipher alg, SecretKey key, List<int> nonce, String file_to_treat, String file_to_write) async {
-//}
+void deleteDirectories(String directoryPath){
+  final Directory directory = Directory(directoryPath);
+  final List<FileSystemEntity> entities = directory.listSync();
+
+  for (final FileSystemEntity entity in entities) {
+    if (entity is Directory) {
+      new Directory(entity.path).delete(recursive: true);
+    }
+  }
+}
+
+Future<void> cipherFile(Cipher alg, SecretKey key, String file_to_read, String file_to_write) async {
+  final file = await File(file_to_read);
+  final encrypted_file = await File(file_to_write).create(recursive: true);
+
+  final data_file = await file.readAsString();
+  final cipherdata_file = await cipherData(alg, key, data_file);
+
+  encrypted_file.writeAsString(new String.fromCharCodes(cipherdata_file.concatenation()));
+  file.delete();
+}
+
+Future<void> decipherFile(Cipher alg, SecretKey key, String file_to_read, String file_to_write) async {
+  final file = await File(file_to_read);
+  final decrypted_file = await File(file_to_write).create(recursive: true);
+
+  final data_file = await file.readAsString();
+  final cleardata_file = await decipherData(alg, key, data_file);
+
+  decrypted_file.writeAsString(cleardata_file);
+  file.delete();
+}
 
 Future<SecretBox> cipherData(Cipher alg, SecretKey key, String data) async {
   /*
@@ -159,60 +178,85 @@ Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
   return cleartext;
 }
 
-//void decipherDirectory(String algorithm, String password, String directory) async {
-//  final alg = callAlg(algorithm);
-//  final nonce = hexToBytes(await importData("nonce", directory));
-//  final salt = hexToBytes(await importData("salt", directory));
-//  final ciphermap = await importData("hierarchy", directory);
-//  final map = await decipherData(alg, key, ciphermap);
-//  final hash = await getHash(password, salt);
-//  final key = await keyGen(alg, hash);
-//}
-//
-//void cipherDirectory(String algorithm, String password, String directory) async {
-//  final alg = callAlg(algorithm);
-//  final nonce = hexToBytes(await importData("nonce", directory));
-//  final salt = hexToBytes(await importData("salt", directory));
-//  final hash = await getHash(password, salt);
-//  final key = await keyGen(alg, hash);
-//  final ciphermap = await importData("hierarchy", directory);
-//  final map = await decipherData(alg, key, ciphermap);
-//  final map_to_compare = await fileHierarchy(directory);
-//  if (map =! map_to_compare) {
-//    final ciphermap = await cipherData(alg, key, json.encode(map_to_compare));
-//    updateConfig(algorithm, password, new String.fromCharCodes(ciphermap.concatenation()), directory);
-//  }
-//}
-//
-//void updateConfig(String algorithm, String nonce, String salt, String password, String map, String directory) async {
-//  final alg = callAlg(algorithm);
-//  final hash = await getHash(password, salt);
-//  final key = await keyGen(alg, hash);
-//  exportConfig(bytesToHex(nonce), bytesToHex(salt), map, directory);
-//}
-//
-//void createConfig(String algorithm, String password, String directory) async {
-//  final alg = callAlg(algorithm);
-//  final nonce = await nonceGen(alg);
-//  final salt = await nonceGen(alg);
-//  final hash = await getHash(password, salt);
-//  final key = await keyGen(alg, hash);
-//  final map = await fileHierarchy(directory);
-//  final ciphermap = await cipherData(alg, key, json.encode(map));
-//  exportConfig(bytesToHex(nonce), bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), directory);
-//}
+Future<int> decipherDirectory(String password, String directory) async {
+  final alg = callAlg(await importData("algorithm", directory));
+  final salt = hexToBytes(await importData("salt", directory));
+  final hash = await getHash(password, salt);
+  final key = await keyGen(alg, hash);
+  final ciphermap = await importData("hierarchy", directory);
+  try {
+    final map = jsonDecode(await decipherData(alg, key, ciphermap));
+    for (var i in map.keys){
+      for (var k in map[i].keys){
+        await decipherFile(alg, key, directory+"/"+map[i][k], k);
+      }
+    }
+    return 0;
+  } catch (e) {
+    return 1;
+  }
+}
+
+Future<int> cipherDirectory(String password, String directory) async {
+  final algorithm = await importData("algorithm", directory);
+  final alg = callAlg(algorithm);
+  final salt = hexToBytes(await importData("salt", directory));
+  final hash = await getHash(password, salt);
+  final key = await keyGen(alg, hash);
+  final ciphermap = await importData("hierarchy", directory);
+  try {
+    var map = jsonDecode(await decipherData(alg, key, ciphermap));
+    var map_to_compare = await fileHierarchy(directory);
+    if (map!(map_to_compare)) {
+      final ciphermap = await cipherData(alg, key, json.encode(map_to_compare));
+      updateConfig(await bytesToHex(salt), password, new String.fromCharCodes(ciphermap.concatenation()), directory);
+    }
+    for (var i in map.keys){
+      for (var k in map[i].keys){
+        await cipherFile(alg, key, k, directory+"/"+map[i][k]);
+      }
+    }
+    return 0;
+  }catch (e) {
+    return 1;
+  }
+}
+
+void updateConfig(String salt, String password, String map, String directory) async {
+  exportConfig(await importData("algorithm", directory), salt, map, directory);
+}
+
+void createConfig(String algorithm, String password, String directory) async {
+  final alg = callAlg(algorithm);
+  final salt = alg.newNonce();
+  final hash = await getHash(password, salt);
+  final key = await keyGen(alg, hash);
+  final map = await fileHierarchy(directory);
+  final ciphermap = await cipherData(alg, key, json.encode(map));
+  exportConfig(algorithm, bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), directory);
+}
 
 void main() async {
-  final alg = callAlg("AES-CTR-256bits");
-  final nonce = await nonceGen(alg);
-  final salt = await nonceGen(alg);
+  final alg = callAlg("Xchacha20");
+  final salt = alg.newNonce();
   final password = await getHash("LaMèreMichel", salt);
   final key = await keyGen(alg, password);
-  final map = await fileHierarchy("intro/");
+  final map = await fileHierarchy("demo/");
   final ciphermap = await cipherData(alg, key, json.encode(map));
-  exportConfig(bytesToHex(nonce), bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), "intro");
-  final map_from_file = await importData("hierarchy", "intro");
-  final clearmap = await decipherData(alg, key, map_from_file);
-  print(clearmap);
+  exportConfig("Xchacha20", bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), "demo");
+  final map_from_file = await importData("hierarchy", "demo");
+  Map clearmap = jsonDecode(await decipherData(alg, key, map_from_file));
+  for (var i in clearmap.keys){
+    for (var k in clearmap[i].keys){
+      await cipherFile(alg, key, k, "demo/"+clearmap[i][k]);
+    }
+  }
+  deleteDirectories("demo");
+  sleep(Duration(seconds: 10));
+  for (var i in clearmap.keys){
+    for (var k in clearmap[i].keys){
+      await decipherFile(alg, key, "demo/"+clearmap[i][k], k);
+    }
+  }
 }
 

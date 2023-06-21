@@ -33,7 +33,6 @@ dependencies:
     intl: ^0.17.0
     animations: ^2.0.3
     cryptography: ^2.5.0
-    cryptography-flutter: ^2.3.0
 
 dev_dependencies:
     flutter_test:
