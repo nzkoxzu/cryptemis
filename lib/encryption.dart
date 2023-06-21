@@ -140,10 +140,10 @@ Future<void> cipherFile(Cipher alg, SecretKey key, String file_to_read, String f
   final encrypted_file = await File(file_to_write).create(recursive: true);
 
   final data_file = await file.readAsString();
+  file.delete();
   final cipherdata_file = await cipherData(alg, key, data_file);
 
   encrypted_file.writeAsString(new String.fromCharCodes(cipherdata_file.concatenation()));
-  file.delete();
 }
 
 Future<void> decipherFile(Cipher alg, SecretKey key, String file_to_read, String file_to_write) async {
@@ -151,10 +151,10 @@ Future<void> decipherFile(Cipher alg, SecretKey key, String file_to_read, String
   final decrypted_file = await File(file_to_write).create(recursive: true);
 
   final data_file = await file.readAsString();
+  file.delete();
   final cleardata_file = await decipherData(alg, key, data_file);
 
   decrypted_file.writeAsString(cleardata_file);
-  file.delete();
 }
 
 Future<SecretBox> cipherData(Cipher alg, SecretKey key, String data) async {
