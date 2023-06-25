@@ -110,8 +110,8 @@ void fabPressed(BuildContext context) async {
                   ),
                   // IconButton Chiffrement/Déchiffrement (temporaire pour debug)
                   IconButton(
-                    onPressed: () => selectStorage(context),
-                    icon: Icon(Icons.sd_storage_rounded),
+                    onPressed: () => refresh(context),
+                    icon: Icon(Icons.refresh),
                   )
                 ],
                 title: ValueListenableBuilder<String>(
@@ -220,41 +220,21 @@ void fabPressed(BuildContext context) async {
 
 
 
-// Fonction de selection de la source de stockage (A SUPPRIMER)
-  selectStorage(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: FutureBuilder<List<Directory>>(
-          future: FileManager.getStorageList(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final List<FileSystemEntity> storageList = snapshot.data!;
-              return Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: storageList
-                        .map((e) => ListTile(
-                              title: Text(
-                                "${FileManager.basename(e)}",
-                              ),
-                              onTap: () {
-                                controller.openDirectory(e);
-                                Navigator.pop(context);
-                              },
-                            ))
-                        .toList()),
-              );
-            }
-            return Dialog(
-              child: CircularProgressIndicator(),
-            );
-          },
-        ),
+// Fonction refresh
+refresh(BuildContext context) async {
+  try {
+      String currentPath = controller.getCurrentPath;
+      // workaround pour refresh (navigue dans le dossier source et retourne dans le dossier ou le fichier a été upload)
+      await controller.goToParentDirectory();
+      controller.openDirectory(Directory(currentPath));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error refreshing: $e'),
       ),
     );
   }
+}
 
 // Fonction de tri (sort by)
   sort(BuildContext context) async {
