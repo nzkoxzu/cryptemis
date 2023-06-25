@@ -5,9 +5,8 @@ import 'file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'encryption.dart';
-
-
 import 'package:open_file/open_file.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -32,6 +31,24 @@ class HomePage extends StatelessWidget {
   List<String> encryptionAlgorithms = ['Xchacha20', 'AES'];
   String selectedAlgorithm = 'Xchacha20';
   final FileManagerController controller = FileManagerController();
+
+// fancy custom icon
+Widget getFileIcon(String filePath) {
+  String extension = filePath.split('.').last.toLowerCase();
+
+  switch (extension) {
+    case 'pdf':
+      return Icon(Icons.picture_as_pdf);
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+      return Icon(Icons.image);
+    case 'txt':
+      return Icon(Icons.text_snippet);
+    default:
+      return Icon(Icons.insert_drive_file);
+  }
+}
 
 // Fonction d'upload de fichiers
 void fabPressed(BuildContext context) async {
@@ -115,7 +132,7 @@ void fabPressed(BuildContext context) async {
                         return Card(
                           child: ListTile(
                             leading: FileManager.isFile(entity)
-                                ? Icon(Icons.feed_outlined)
+                                ? getFileIcon(entity.path)
                                 : Icon(Icons.folder),
                             title: Text(FileManager.basename(entity)),
                             subtitle: subtitle(entity),
@@ -148,7 +165,7 @@ void fabPressed(BuildContext context) async {
               ),
               floatingActionButton: FloatingActionButton(
                 // IconButton Upload de fichiers
-                child: Icon(Icons.add_circle_outline),
+                child: Icon(Icons.add_circle),
                 onPressed: () {
                                 fabPressed(context);
                               },
@@ -187,6 +204,8 @@ void fabPressed(BuildContext context) async {
       },
     );
   }
+
+
 
 // Fonction de selection de la source de stockage (A SUPPRIMER)
   selectStorage(BuildContext context) {
