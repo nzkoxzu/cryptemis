@@ -28,9 +28,11 @@ class _MyAppState extends State<MyApp> {
 }
 
 class HomePage extends StatelessWidget {
+
   List<String> encryptionAlgorithms = ['Xchacha20', 'AES'];
   String selectedAlgorithm = 'Xchacha20';
   final FileManagerController controller = FileManagerController();
+
 
 // fancy custom icon
 Widget getFileIcon(String filePath) {
@@ -64,8 +66,13 @@ void fabPressed(BuildContext context) async {
 
       // Upload le fichier dans le dossier reservé à Cryptemis
       Directory appDirectory = await getApplicationDocumentsDirectory();
-      String filePath = '${controller.getCurrentPath}/$fileName';
+      String currentPath = controller.getCurrentPath;
+      String filePath = '$currentPath/$fileName';
       await file.copy(filePath);
+      // workaround pour refresh (navigue dans le dossier source et retourne dans le dossier ou le fichier a été upload)
+      await controller.goToParentDirectory();
+      controller.openDirectory(Directory(currentPath));
+
     }
   } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +126,7 @@ void fabPressed(BuildContext context) async {
                   },
                 ),
               ),
-              body: Container(
+              body: Container( 
                 margin: EdgeInsets.all(10),
                 child: FileManager(
                   controller: controller,
