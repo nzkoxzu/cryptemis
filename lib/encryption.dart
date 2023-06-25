@@ -191,6 +191,7 @@ Future<int> decipherDirectory(String password, String directory) async {
         await decipherFile(alg, key, directory+"/"+map[i][k], k);
       }
     }
+    key.destroy();
     return 0;
   } catch (e) {
     return 1;
@@ -216,6 +217,7 @@ Future<int> cipherDirectory(String password, String directory) async {
         await cipherFile(alg, key, k, directory+"/"+map[i][k]);
       }
     }
+    key.destroy();
     return 0;
   }catch (e) {
     return 1;
@@ -234,5 +236,6 @@ void createConfig(String algorithm, String password, String directory) async {
   final map = await fileHierarchy(directory);
   final ciphermap = await cipherData(alg, key, json.encode(map));
   exportConfig(algorithm, bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), directory);
+  key.destroy();
 }
 
