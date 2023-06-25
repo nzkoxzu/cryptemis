@@ -135,8 +135,14 @@ void fabPressed(BuildContext context) async {
                                 // entity.exists();
 
                               } else {
-                                // supprimer un fichier
-                                // await entity.delete();
+                                        // Ouvre le fichier
+                                        OpenResult result = await OpenFile.open(entity.path);
+                                        if (result.type == ResultType.done || result.type == ResultType.noAppToOpen) {
+                                          // print pour debug
+                                          print('Fichier ouvert avec succès');
+                                        } else {
+                                          print('Impossible d\'ouvrir le fichier');
+                                        }
                               }
                             },
                           ),
