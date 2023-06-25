@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'encryption.dart';
 
+
+import 'package:open_file/open_file.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -361,9 +364,9 @@ cypherr(BuildContext context) async {
                 onPressed: () async {
                   try {
                     String algorithm = selectedAlgorithm;
-                    String directory = "/data/user/0/com.example.lib/app_flutter/test";
+                    String directory = "/data/user/0/org.app.cryptemis/app_flutter/test";
                     String password = inputField2.text;
-                    createConfig("Xchacha20", "yolo", "/data/user/0/com.example.lib/app_flutter/test");
+                    createConfig("Xchacha20", "yolo", "/data/user/0/org.app.cryptemis/app_flutter/test");
                   } catch (e) {
                     // Show error message
                     ScaffoldMessenger.of(context).showSnackBar(

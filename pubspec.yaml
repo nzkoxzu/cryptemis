@@ -40,6 +40,7 @@ dependencies:
   intl: ^0.17.0
   animations: ^2.0.3
   cryptography: ^2.5.0
+  open_file: ^3.0.1
 
 
   # The following adds the Cupertino Icons font to your application.
