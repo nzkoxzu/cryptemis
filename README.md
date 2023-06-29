@@ -48,5 +48,10 @@ Here are the required dependencies :
 - [x] Set custom logo
 - [x] Implement Dashboard UI
 - [x] Define encryption/decryption method
-  - [ ] Implement encryption/decryption
+  - [x] Implement encryption/decryption
+  - [ ] Documentation
+  - [ ] Implement backend encryption
+  - [ ] File deletion implementation
+  - [ ] Self-Hosted SFTP backup implementation (Ubuntu)
+  - [ ] Snap store & Play store implementation
 - [x] README.md update
