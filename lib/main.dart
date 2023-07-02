@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'encryption.dart';
 import 'package:open_file/open_file.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+
 
 
 void main() {
@@ -83,60 +85,79 @@ void fabPressed(BuildContext context) async {
   }
 }
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: path_provider.getApplicationDocumentsDirectory(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return ControlBackButton(
-            controller: controller,
-            child: Scaffold(
-              appBar: AppBar(
-                actions: [
-                  // IconButton Créer un dossier
-                  IconButton(
-                    onPressed: () => cypherr(context),
-                    icon: Icon(Icons.enhanced_encryption_rounded),
-                  ),
-                  IconButton(
-                    onPressed: () => createFolder(context),
-                    icon: Icon(Icons.create_new_folder_outlined),
-                  ),
-                  // IconButton Filtrer par
-                  IconButton(
-                    onPressed: () => sort(context),
-                    icon: Icon(Icons.sort_rounded),
-                  ),
-                  // IconButton Chiffrement/Déchiffrement (temporaire pour debug)
-                  IconButton(
-                    onPressed: () => refresh(context),
-                    icon: Icon(Icons.refresh),
-                  )
-                ],
-                title: ValueListenableBuilder<String>(
-                  valueListenable: controller.titleNotifier,
-                  builder: (context, title, _) => Text(title),
+@override
+Widget build(BuildContext context) {
+  return FutureBuilder(
+    future: path_provider.getApplicationDocumentsDirectory(),
+    builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        return ControlBackButton(
+          controller: controller,
+          child: Scaffold(
+            appBar: AppBar(
+              actions: [
+                // IconButton Créer un dossier
+                IconButton(
+                  onPressed: () => cypherr(context),
+                  icon: Icon(Icons.enhanced_encryption_rounded),
                 ),
-                // IconButton Retour (goToParentDirectory)
-                leading: IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () async {
-                    await controller.goToParentDirectory();
-                  },
+                IconButton(
+                  onPressed: () => createFolder(context),
+                  icon: Icon(Icons.create_new_folder_outlined),
                 ),
+                // IconButton Filtrer par
+                IconButton(
+                  onPressed: () => sort(context),
+                  icon: Icon(Icons.sort_rounded),
+                ),
+                // IconButton Chiffrement/Déchiffrement (temporaire pour debug)
+                IconButton(
+                  onPressed: () => refresh(context),
+                  icon: Icon(Icons.refresh),
+                )
+              ],
+              title: ValueListenableBuilder<String>(
+                valueListenable: controller.titleNotifier,
+                builder: (context, title, _) => Text(title),
               ),
-              body: Container( 
-                margin: EdgeInsets.all(10),
-                child: FileManager(
-                  controller: controller,
-                  builder: (context, snapshot) {
-                    final List<FileSystemEntity> entities = snapshot;
-                    return ListView.builder(
-                      itemCount: entities.length,
-                      itemBuilder: (context, index) {
-                        FileSystemEntity entity = entities[index];
-                        return Card(
+              // IconButton Retour (goToParentDirectory)
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () async {
+                  await controller.goToParentDirectory();
+                },
+              ),
+            ),
+            body: Container(
+              margin: EdgeInsets.all(10),
+              child: FileManager(
+                controller: controller,
+                builder: (context, snapshot) {
+                  final List<FileSystemEntity> entities = snapshot;
+                  return ListView.builder(
+                    itemCount: entities.length,
+                    itemBuilder: (context, index) {
+                      FileSystemEntity entity = entities[index];
+                      return Slidable(
+                        actionPane: SlidableDrawerActionPane(),
+                        secondaryActions: [
+                          IconSlideAction(
+                            caption: 'Delete',
+                            color: Colors.red,
+                            icon: Icons.delete,
+                            onTap: () async {
+                              await entity.delete(recursive: true);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Element deleted'),
+                                ),
+                              );
+                              // Rafraîchir la liste après la suppression si nécessaire
+                              refresh(context);
+                            },
+                          ),
+                        ],
+                        child: Card(
                           child: ListTile(
                             leading: FileManager.isFile(entity)
                                 ? getFileIcon(entity.path)
@@ -157,42 +178,43 @@ void fabPressed(BuildContext context) async {
     
                                 // Check si un dossier existe
                                 // entity.exists();
-
                               } else {
-                                        // Ouvre le fichier
-                                        OpenResult result = await OpenFile.open(entity.path);
-                                        if (result.type == ResultType.done || result.type == ResultType.noAppToOpen) {
-                                          // print pour debug
-                                          print('Fichier ouvert avec succès');
-                                        } else {
-                                          print('Impossible d\'ouvrir le fichier');
-                                        }
+                                // Ouvre le fichier
+                                OpenResult result = await OpenFile.open(entity.path);
+                                if (result.type == ResultType.done || result.type == ResultType.noAppToOpen) {
+                                  // print pour debug
+                                  print('Fichier ouvert avec succès');
+                                } else {
+                                  print('Impossible d\'ouvrir le fichier');
+                                }
                               }
                             },
                           ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              floatingActionButton: FloatingActionButton(
-                // IconButton Upload de fichiers
-                child: Icon(Icons.add_circle),
-                onPressed: () {
-                                fabPressed(context);
-                              },
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-          );
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
-    );
-  }
+            floatingActionButton: FloatingActionButton(
+              // IconButton Upload de fichiers
+              child: Icon(Icons.add_circle),
+              onPressed: () {
+                fabPressed(context);
+              },
+            ),
+          ),
+        );
+      } else if (snapshot.hasError) {
+        return Text('Error: ${snapshot.error}');
+      } else {
+        return CircularProgressIndicator();
+      }
+    },
+  );
+}
+
 
 
 
