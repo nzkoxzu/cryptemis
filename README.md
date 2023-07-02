@@ -41,6 +41,7 @@ Here are the required dependencies :
 - permission_handler
 - open_file
 - cryptography
+- flutter_slidable
 
 ### RoadMap
 
@@ -51,7 +52,7 @@ Here are the required dependencies :
   - [x] Implement encryption/decryption
   - [ ] Documentation
   - [ ] Implement backend encryption
-  - [ ] File deletion implementation
+  - [x] File deletion implementation
   - [ ] Self-Hosted SFTP backup implementation (Ubuntu)
   - [ ] Snap store & Play store implementation
 - [x] README.md update
