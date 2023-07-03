@@ -1,0 +1,28 @@
+name: cryptemis
+version: 1.0.0
+summary: Cross-platform mobile application to store encrypted files 
+description: Cryptemis is a cross-platform mobile application that aims to be privacy friendly. Users can locally store encrypted files. This is still a proof of concept.
+
+confinement: strict
+base: core18
+grade: stable
+
+slots:
+  dbus-cryptemis:
+    interface: dbus
+    bus: session
+    name: org.app.cryptemis
+    
+apps:
+  cryptemis:
+    command: cryptemis
+    extensions: [flutter-master]
+    plugs:
+    - network
+    slots:
+      - dbus-cryptemis
+parts:
+  cryptemis:
+    source: .
+    plugin: flutter
+    flutter-target: lib/main.dart
