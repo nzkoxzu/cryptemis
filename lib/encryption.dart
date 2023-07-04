@@ -113,7 +113,7 @@ Future<Map<String, dynamic>> fileHierarchy(String directoryPath) async {
       }
       final data = await algorithm.hash(values);
       final fileName = entity.uri.pathSegments.last;
-      if (fileName != '.cryptemis') {
+      if (fileName != '.cryptemis' && fileName != '.encrypted') {
         files[fileName] = {entity.path: bytesToHex(data.bytes)};
       }
     } else if (entity is Directory) {

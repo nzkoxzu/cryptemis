@@ -398,9 +398,23 @@ cypherr(BuildContext context) async {
                 onPressed: () async {
                   try {
                     String algorithm = selectedAlgorithm;
-                    String directory = "/data/user/0/org.app.cryptemis/app_flutter/test";
+                    String directory = "/data/user/0/org.app.cryptemis/cryptemis";
                     String password = inputField2.text;
-                    createConfig("Xchacha20", "yolo", "/data/user/0/org.app.cryptemis/app_flutter/test");
+                    final filePath = '$directory/.cryptemis';
+                    final encryptionPath = '$directory/.encrypted';
+                    final file = File(filePath);
+                    final encryption = File(encryptionPath);
+
+                    if (await file.exists()) {
+                      print('.cryptemis exist');
+                      isEncrypted(encryption, password, directory, encryption, context);
+                    } else {
+                      print('File does not exist, creating now ...');
+                      createConfig(algorithm, password, directory);
+                    }
+
+
+
                   } catch (e) {
                     // Show error message
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -421,5 +435,33 @@ cypherr(BuildContext context) async {
   );
 }
 
+void isEncrypted(File file, String password, String directory, final encryption, BuildContext context) async {
+      int result = 2;
+      if (await encryption.exists()){
+        result = await decipherDirectory(password, directory);
+
+        if (result == 0 ) {
+            final snackBar = SnackBar(
+              content: Text('Folder decrypted !'),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+        await file.delete();
+        } else  {
+          final snackBar = SnackBar(
+            content: Text('Wrong Password !'),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
+      }else  {
+        final snackBar = SnackBar(
+          content: Text('Folder encrypted !'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        cipherDirectory(password, directory);
+        await file.create();
+        }
+
+}
 
 }
