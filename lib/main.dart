@@ -10,7 +10,60 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 
 
 
+final FileManagerController controller = FileManagerController();
+
+
+// Create cryptemis folder if not exist
+void createCryptemisFolder() async {
+  String folderName = 'cryptemis_folder';
+
+  // check if cryptemis folder exist
+  bool isFolderExist(String folderName) {
+    Directory directory = Directory(folderName);
+    return directory.existsSync();
+}
+
+  switch (Platform.operatingSystem) {
+    case 'android':
+    case 'ios':
+      if (isFolderExist(folderName)) {
+        print('Folder exists: $folderName');
+      } else {
+        String cryptemisPath = '/data/user/0/org.app.cryptemis/';
+        await FileManager.createFolder(cryptemisPath, folderName);
+        controller.setCurrentPath = cryptemisPath+ "/" + folderName;
+        print('Successfully created cryptemis directory');
+      }
+      break;
+      
+    case 'windows':
+    case 'macos':
+    case 'linux':
+      String documentsDir = '';
+      if (Platform.isWindows) {
+        documentsDir = Platform.environment['USERPROFILE'] ?? '';
+        String cryptemisPath = documentsDir;
+        await FileManager.createFolder(cryptemisPath, folderName);
+
+
+      } else {
+        documentsDir = Platform.environment['HOME'] ?? '';
+        String cryptemisPath = documentsDir;
+        await FileManager.createFolder(cryptemisPath, folderName);
+        controller.setCurrentPath = cryptemisPath+ "/" + folderName;
+        print ('Successfully created cryptemis directory');
+      }
+
+      break;
+    default:
+      print('Unsupported operating system.');
+  }
+
+
+}
+
 void main() {
+  createCryptemisFolder();
   runApp(MyApp());
 }
 
@@ -33,7 +86,7 @@ class HomePage extends StatelessWidget {
 
   List<String> encryptionAlgorithms = ['Xchacha20', 'AES'];
   String selectedAlgorithm = 'Xchacha20';
-  final FileManagerController controller = FileManagerController();
+  
 
 
 // fancy custom icon
@@ -54,8 +107,9 @@ Widget getFileIcon(String filePath) {
   }
 }
 
+
 // Fonction d'upload de fichiers
-void fabPressed(BuildContext context) async {
+void fileUpload(BuildContext context) async {
   try {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
@@ -71,9 +125,7 @@ void fabPressed(BuildContext context) async {
       String currentPath = controller.getCurrentPath;
       String filePath = '$currentPath/$fileName';
       await file.copy(filePath);
-      // workaround pour refresh (navigue dans le dossier source et retourne dans le dossier ou le fichier a été upload)
-      await controller.goToParentDirectory();
-      controller.openDirectory(Directory(currentPath));
+      refresh(context);
 
     }
   } catch (e) {
@@ -201,7 +253,7 @@ Widget build(BuildContext context) {
               // IconButton Upload de fichiers
               child: Icon(Icons.add_circle),
               onPressed: () {
-                fabPressed(context);
+                fileUpload(context);
               },
             ),
           ),
@@ -321,14 +373,11 @@ createFolder(BuildContext context) async {
                   try {
                     // Créé le fichier
                     await FileManager.createFolder(controller.getCurrentPath, folderName.text);
+                    refresh(context);
                     // Ouvre le fichier
-                    controller.setCurrentPath = controller.getCurrentPath + "/" + folderName.text;
+                    // controller.setCurrentPath = controller.getCurrentPath + "/" + folderName.text;
 
 
-                    // Crée un fichier encryption.cryptemis dans le dossier qui vient d'être créé
-                    final file = File('${controller.getCurrentPath}/encryption.cryptemis');
-                    //await file.writeAsString('jecris du contenu dans mon fichier encryption.cryptemis');
-                    var dir = Directory.current;
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
