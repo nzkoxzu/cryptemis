@@ -95,16 +95,31 @@ Widget getFileIcon(String filePath) {
 
   switch (extension) {
     case 'pdf':
-      return Icon(Icons.picture_as_pdf);
+      Color ? iconColor;
+      iconColor = Colors.red[900]; 
+      return Icon(Icons.picture_as_pdf, color: iconColor);
     case 'png':
     case 'jpg':
     case 'jpeg':
-      return Icon(Icons.image);
+      Color ? iconColor;
+      iconColor = Colors.purple[900]; 
+      return Icon(Icons.image, color : iconColor);
     case 'txt':
-      return Icon(Icons.text_snippet);
+      Color ? iconColor;
+      iconColor = Colors.green[900]; 
+      return Icon(Icons.text_snippet, color : iconColor);
+    case 'cryptemis':
+      Color ? iconColor;
+      iconColor = Colors.black; 
+      return Icon(Icons.text_snippet, color : iconColor);
+      
     default:
-      return Icon(Icons.insert_drive_file);
+      Color ? iconColor;
+      iconColor = Colors.yellow[400]; 
+      return Icon(Icons.insert_drive_file, color : iconColor);
   }
+
+  
 }
 
 
