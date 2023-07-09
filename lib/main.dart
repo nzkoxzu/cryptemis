@@ -205,57 +205,42 @@ Widget build(BuildContext context) {
                     itemCount: entities.length,
                     itemBuilder: (context, index) {
                       FileSystemEntity entity = entities[index];
-                      return Slidable(
-                        actionPane: SlidableDrawerActionPane(),
-                        secondaryActions: [
-                          IconSlideAction(
-                            caption: 'Delete',
-                            color: Colors.red,
-                            icon: Icons.delete,
-                            onTap: () async {
-                              await entity.delete(recursive: true);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Element deleted'),
-                                ),
-                              );
-                              // Rafraîchir la liste après la suppression si nécessaire
-                              refresh(context);
-                            },
-                          ),
-                        ],
-                        child: Card(
-                          child: ListTile(
-                            leading: FileManager.isFile(entity)
-                                ? getFileIcon(entity.path)
-                                : Icon(Icons.folder),
-                            title: Text(FileManager.basename(entity)),
-                            subtitle: subtitle(entity),
-                            onTap: () async {
-                              if (FileManager.isDirectory(entity)) {
-                                // ouvre le dossier
-                                controller.openDirectory(entity);
-    
-                                // Utile pour la suite du projet
-                                // supprimer un dossier
-                                // await entity.delete(recursive: true);
-    
-                                // renommer un dossier 
-                                // await entity.rename("newPath");
-    
-                                // Check si un dossier existe
-                                // entity.exists();
-                              } else {
-                                // Ouvre le fichier
-                                OpenResult result = await OpenFile.open(entity.path);
-                                if (result.type == ResultType.done || result.type == ResultType.noAppToOpen) {
-                                  // print pour debug
-                                  print('Fichier ouvert avec succès');
-                                } else {
-                                  print('Impossible d\'ouvrir le fichier');
-                                }
-                              }
-                            },
+                      return GestureDetector(
+                        onTap: () async {
+                          if (FileManager.isDirectory(entity)) {
+                            // ouvre le dossier
+                            //controller.openDirectory(entity);
+                          } else {
+                            // Ouvre le fichier
+                          }
+                        },
+                        child: Slidable(
+                          actionPane: SlidableDrawerActionPane(),
+                          secondaryActions: [
+                            IconSlideAction(
+                              caption: 'Delete',
+                              color: Colors.red,
+                              icon: Icons.delete,
+                              onTap: () async {
+                                await entity.delete(recursive: true);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Element deleted'),
+                                  ),
+                                );
+                                // Rafraîchir la liste après la suppression si nécessaire
+                                refresh(context);
+                              },
+                            ),
+                          ],
+                          child: Card(
+                            child: ListTile(
+                              leading: FileManager.isFile(entity)
+                                  ? getFileIcon(entity.path)
+                                  : Icon(Icons.folder),
+                              title: Text(FileManager.basename(entity)),
+                              subtitle: subtitle(entity),
+                            ),
                           ),
                         ),
                       );
@@ -281,6 +266,9 @@ Widget build(BuildContext context) {
     },
   );
 }
+
+
+
 
 
 

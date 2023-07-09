@@ -4,9 +4,11 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-
 import 'package:file_manager/helper/helper.dart';
 export 'package:file_manager/helper/helper.dart';
+import 'package:open_file/open_file.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'main.dart';
 
 typedef _Builder = Widget Function(
   BuildContext context,
@@ -334,44 +336,213 @@ Future<List<Directory>> _createDirectory(Directory directory) async {
     );
   }
 
-  Widget _body(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: widget.controller.getPathNotifier,
-      builder: (context, pathSnapshot, _) {
-        return ValueListenableBuilder<SortBy>(
-            valueListenable: widget.controller.getSortedByNotifier,
-            builder: (context, snapshot, _) {
-              return FutureBuilder<List<FileSystemEntity>>(
-                  future: _sortEntitysList(pathSnapshot,
-                      widget.controller.getSortedByNotifier.value),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      List<FileSystemEntity> entitys = snapshot.data!;
-                      if (entitys.length == 0) {
-                        return _emptyFolderWidger();
-                      }
-                      if (widget.hideHiddenEntity) {
-                        entitys = entitys.where((element) {
-                          if (FileManager.basename(element) == "" ||
-                              FileManager.basename(element).startsWith('.')) {
-                            return false;
-                          } else {
-                            return true;
-                          }
-                        }).toList();
-                      }
-                      return widget.builder(context, entitys);
-                    } else if (snapshot.hasError) {
-                      print(snapshot.error);
-                      return _errorPage(snapshot.error.toString());
+Widget _body(BuildContext context) {
+  return ValueListenableBuilder<String>(
+    valueListenable: widget.controller.getPathNotifier,
+    builder: (context, pathSnapshot, _) {
+      return ValueListenableBuilder<SortBy>(
+        valueListenable: widget.controller.getSortedByNotifier,
+        builder: (context, snapshot, _) {
+          return FutureBuilder<List<FileSystemEntity>>(
+            future: _sortEntitysList(
+              pathSnapshot,
+              widget.controller.getSortedByNotifier.value,
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                List<FileSystemEntity> entities = snapshot.data!;
+                if (entities.length == 0) {
+                  return _emptyFolderWidger();
+                }
+                if (widget.hideHiddenEntity) {
+                  entities = entities.where((element) {
+                    if (FileManager.basename(element) == "" ||
+                        FileManager.basename(element).startsWith('.')) {
+                      return false;
                     } else {
-                      return _loadingScreenWidget();
+                      return true;
                     }
-                  });
-            });
-      },
-    );
+                  }).toList();
+                }
+
+                return ListView.builder(
+                  itemCount: entities.length,
+                  itemBuilder: (context, index) {
+                    FileSystemEntity entity = entities[index];
+                    if (FileManager.isDirectory(entity)) {
+                      Directory parentDirectory = Directory(entity.path).parent;
+                      if (FileManager.basename(parentDirectory) == "cryptemis_folder") {
+                        return GestureDetector(
+                          onTap: () async {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Entrez le mot de passe'),
+                                content: TextField(
+                                  obscureText: true,
+                                  onChanged: (value) {
+                                    // Faire qqchose avec le mot de passe saisi
+                                  },
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text('Annuler'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      // Check le mdp ici et Déchiffrer si le mdp est correct et naviguer dedans
+                                      String password = ''; // Récupérer le mot de passe saisi
+                                      bool isPasswordCorrect = false; // Vérifiez si le mot de passe est correct
+                                      if (isPasswordCorrect) {
+                                        // Ouvrez le dossier
+                                      } else {
+                                        // Affichez un message d'erreur de mot de passe incorrect
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Mot de passe incorrect'),
+                                          ),
+                                        );
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text('Valider'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Slidable(
+                            actionPane: SlidableDrawerActionPane(),
+                            secondaryActions: [
+                              IconSlideAction(
+                                caption: 'Delete',
+                                color: Colors.red,
+                                icon: Icons.delete,
+                                onTap: () async {
+                                  await entity.delete(recursive: true);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Element deleted'),
+                                    ),
+                                  );
+                                  // Rafraîchir la liste après la suppression si nécessaire
+                                  //refresh(context);
+                                },
+                              ),
+                            ],
+                            child: Card(
+                              child: ListTile(
+                                leading: FileManager.isDirectory(entity)
+                                    ? Icon(Icons.folder)
+                                    : getFileIcon(entity),
+                                title: Text(FileManager.basename(entity)),
+                                subtitle: subtitle(entity),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    }
+
+                    return GestureDetector(
+                      onTap: () async {
+                        if (FileManager.isDirectory(entity)) {
+                          widget.controller.openDirectory(entity);
+                        } else {
+                          // Handle le fichier
+                          OpenResult result = await OpenFile.open(entity.path);
+                          if (result.type == ResultType.done || result.type == ResultType.noAppToOpen) {
+                            print('Fichier ouvert avec succès');
+                          } else {
+                            print('Impossible d\'ouvrir le fichier');
+                          }
+                        }
+                      },
+                      child: Slidable(
+                        actionPane: SlidableDrawerActionPane(),
+                        secondaryActions: [
+                          IconSlideAction(
+                            caption: 'Delete',
+                            color: Colors.red,
+                            icon: Icons.delete,
+                            onTap: () async {
+                              await entity.delete(recursive: true);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Element deleted'),
+                                ),
+                              );
+                              // Rafraîchir la liste après la suppression si nécessaire
+                              //widget.controller.refresh(context);
+                            },
+                          ),
+                        ],
+                        child: Card(
+                          child: ListTile(
+                            leading: FileManager.isDirectory(entity)
+                                ? Icon(Icons.folder)
+                                : getFileIcon(entity),
+                            title: Text(FileManager.basename(entity)),
+                            subtitle: subtitle(entity),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              } else if (snapshot.hasError) {
+                print(snapshot.error);
+                return _errorPage(snapshot.error.toString());
+              } else {
+                return _loadingScreenWidget();
+              }
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+
+
+
+
+Icon getFileIcon(FileSystemEntity entity) {
+  // Code pour obtenir l'icône du fichier/dossier en fonction de son type
+  if (FileManager.isFile(entity)) {
+    // C'est un fichier
+    return Icon(Icons.insert_drive_file);
+  } else if (FileManager.isDirectory(entity)) {
+    // C'est un dossier
+    return Icon(Icons.folder);
+  } else {
+    // Type inconnu, retourne une icône générique
+    return Icon(Icons.file_copy);
   }
+}
+
+Widget subtitle(FileSystemEntity entity) {
+  // Code pour obtenir le sous-titre du fichier/dossier
+  // Vous pouvez personnaliser cette méthode en fonction de vos besoins
+  if (FileManager.isFile(entity)) {
+    // C'est un fichier, retourne les détails du fichier
+    return Text('Taille : ${FileManager.formatBytes((entity as File).lengthSync())}');
+  } else if (FileManager.isDirectory(entity)) {
+    // C'est un dossier, retourne le nombre d'éléments dans le dossier
+    Directory directory = entity as Directory;
+    int itemCount = directory.listSync().length;
+    return Text('$itemCount éléments');
+  } else {
+    // Type inconnu, retourne un sous-titre générique
+    return Text('Type inconnu');
+  }
+}
+
+
 
   Widget _emptyFolderWidger() {
     if (widget.emptyFolder == null) {
