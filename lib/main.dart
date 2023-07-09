@@ -112,7 +112,7 @@ class HomePage extends StatelessWidget {
 
 // Fonction d'upload de fichiers
   void fileUpload(BuildContext context) async {
-    if (await Permission.manageExternalStorage.request().isGranted) {
+    if (await Permission.storage.request().isGranted) {
       try {
         FilePickerResult? result = await FilePicker.platform.pickFiles();
         if (result != null) {
@@ -137,6 +137,11 @@ class HomePage extends StatelessWidget {
           ),
         );
       }
+    }else {
+        Map<Permission, PermissionStatus> statuses = await [
+        Permission.storage,
+        ].request();
+        statuses;
     }
   }
 
