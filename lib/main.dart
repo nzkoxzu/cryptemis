@@ -1,16 +1,14 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart' as path_provider;
-import 'package:path_provider/path_provider.dart';
 import 'file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'encryption.dart';
-import 'package:open_file/open_file.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 final FileManagerController controller = FileManagerController();
-
+String password = "";
 // Create cryptemis folder if not exist
 void createCryptemisFolder() async {
   String folderName = 'cryptemis_folder';
@@ -42,6 +40,7 @@ void createCryptemisFolder() async {
         documentsDir = Platform.environment['USERPROFILE'] ?? '';
         String cryptemisPath = documentsDir;
         await FileManager.createFolder(cryptemisPath, folderName);
+        controller.setCurrentPath = cryptemisPath + "/" + folderName;
       } else {
         documentsDir = Platform.environment['HOME'] ?? '';
         String cryptemisPath = documentsDir;
@@ -119,12 +118,7 @@ class HomePage extends StatelessWidget {
           File file = File(result.files.single.path!);
           String fileName = result.files.single.name;
 
-          // Fichier sélectionné, on peut handle le fichier comme on veut
-          // - file contient le fichier sélectionné
-          // - fileName contient le nom du fichier avec son extension
-
           // Upload le fichier dans le dossier reservé à Cryptemis
-          Directory appDirectory = await getApplicationDocumentsDirectory();
           String currentPath = controller.getCurrentPath;
           String filePath = '$currentPath/$fileName';
           await file.copy(filePath);
@@ -137,11 +131,11 @@ class HomePage extends StatelessWidget {
           ),
         );
       }
-    }else {
-        Map<Permission, PermissionStatus> statuses = await [
+    } else {
+      Map<Permission, PermissionStatus> statuses = await [
         Permission.storage,
-        ].request();
-        statuses;
+      ].request();
+      statuses;
     }
   }
 
@@ -158,7 +152,7 @@ class HomePage extends StatelessWidget {
                 actions: [
                   // IconButton Créer un dossier
                   IconButton(
-                    onPressed: () => cypherr(context),
+                    onPressed: () => CreateEncryptedFolder(context),
                     icon: Icon(Icons.enhanced_encryption_rounded),
                   ),
                   IconButton(
@@ -184,7 +178,14 @@ class HomePage extends StatelessWidget {
                 leading: IconButton(
                   icon: Icon(Icons.arrow_back),
                   onPressed: () async {
+                    // Chiffrement si l'utilisateur est revenue dans le dossier racine cryptemis_folder
+                    final oldDirectory = controller.getCurrentPath;
                     await controller.goToParentDirectory();
+                    final currentDirectory = controller.getCurrentPath;
+                    String lastFolder = currentDirectory.split('/').last;
+                    if (lastFolder == "cryptemis_folder") {
+                      cipherDirectory(password, oldDirectory);
+                    }
                   },
                 ),
               ),
@@ -363,8 +364,6 @@ class HomePage extends StatelessWidget {
                       await FileManager.createFolder(
                           controller.getCurrentPath, folderName.text);
                       refresh(context);
-                      // Ouvre le fichier
-                      // controller.setCurrentPath = controller.getCurrentPath + "/" + folderName.text;
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -384,10 +383,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  cypherr(BuildContext context) async {
-    //TextEditingController inputField1 = TextEditingController();
-    TextEditingController inputField2 = TextEditingController();
-    TextEditingController inputField3 = TextEditingController();
+  CreateEncryptedFolder(BuildContext context) async {
+    TextEditingController passwordField = TextEditingController();
+    TextEditingController directoryField = TextEditingController();
 
     showDialog(
       context: context,
@@ -416,7 +414,8 @@ class HomePage extends StatelessWidget {
                 ),
                 ListTile(
                   title: TextField(
-                    controller: inputField2,
+                    obscureText: true,
+                    controller: passwordField,
                     decoration: InputDecoration(
                       hintText: 'Password',
                     ),
@@ -424,9 +423,9 @@ class HomePage extends StatelessWidget {
                 ),
                 ListTile(
                   title: TextField(
-                    controller: inputField3,
+                    controller: directoryField,
                     decoration: InputDecoration(
-                      hintText: 'dossier',
+                      hintText: 'Folder',
                     ),
                   ),
                 ),
@@ -434,23 +433,20 @@ class HomePage extends StatelessWidget {
                   onPressed: () async {
                     try {
                       String algorithm = selectedAlgorithm;
-                      String directory = inputField3.text;
-                      String password = inputField2.text;
-                      final filePath =
-                          "${controller.getCurrentPath}$directory/.cryptemis";
+                      String directory = directoryField.text;
+                      password = passwordField.text;
 
-                      final encryptionPath = "${controller.getCurrentPath}" +
-                          "/" +
-                          "$directory/.encrypted";
-                      final file = File(filePath);
-                      final encryption = File(encryptionPath);
                       await FileManager.createFolder(
                           "${controller.getCurrentPath}", directory);
+
                       createConfig(algorithm, password,
                           "${controller.getCurrentPath}" + "/" + "$directory");
-                      cipherDirectory(password,
-                          "${controller.getCurrentPath}" + "/" + "$directory");
-                      await encryption.create();
+
+                      controller.setCurrentPath =
+                          controller.getCurrentPath + "/" + directory;
+                      refresh(context);
+
+                      //await encryption.create();
                     } catch (e) {
                       // Show error message
                       ScaffoldMessenger.of(context).showSnackBar(

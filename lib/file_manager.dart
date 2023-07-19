@@ -17,34 +17,24 @@ typedef _Builder = Widget Function(
   List<FileSystemEntity> snapshot,
 );
 
+//Fontion de déchiffrement
 class EncryptionHelper {
-  void isEncrypted(String password, String directory, final encryption,
-      BuildContext context) async {
+  void Decrypt(String password, String directory, BuildContext context) async {
     int result = 2;
-    if (await encryption.exists()) {
-      result = await decipherDirectory(password, directory);
+    result = await decipherDirectory(password, directory);
+    //si le resultat de decipherDirectory est 0 alors le déchiffrement c'est bien passé
+    if (result == 0) {
+      controller.setCurrentPath = directory;
 
-      if (result == 0) {
-        controller.setCurrentPath = directory;
-        final snackBar = SnackBar(
-          content: Text('Folder decrypted !'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-        await encryption.delete();
-      } else {
-        final snackBar = SnackBar(
-          content: Text('Wrong Password !'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
-    } else {
       final snackBar = SnackBar(
-        content: Text('Folder encrypted !'),
+        content: Text('Folder decrypted !'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      cipherDirectory(password, directory);
-      await encryption.create();
+    } else {
+      final snackBar = SnackBar(
+        content: Text('Wrong Password !'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 }
@@ -426,7 +416,7 @@ class _FileManagerState extends State<FileManager> {
                                     ),
                                     TextButton(
                                       onPressed: () async {
-                                        // Check le mdp ici et Déchiffrer si le mdp est correct et naviguer dedans
+                                        //Aprés le clik sur un dossier on envoit les info a la fonction de déchiffrement Decrypt()
                                         String password =
                                             passwordController.text;
 
@@ -434,18 +424,10 @@ class _FileManagerState extends State<FileManager> {
                                             EncryptionHelper();
 
                                         String directory = entity.path;
-                                        final encryptionPath =
-                                            directory + "/.encrypted";
-                                        final encryption = File(encryptionPath);
 
-                                        encryptionHelper.isEncrypted(password,
-                                            directory, encryption, context);
+                                        encryptionHelper.Decrypt(
+                                            password, directory, context);
 
-                                        const duration = Duration(seconds: 60);
-                                        Timer(duration, () {
-                                          cipherDirectory(password, directory);
-                                        });
-                                        await encryption.create();
                                         Navigator.pop(context);
                                       },
                                       child: Text('Valider'),
@@ -652,6 +634,21 @@ class ControlBackButton extends StatelessWidget {
           return false;
         }
       },
+    );
+  }
+}
+
+refresh(BuildContext context) async {
+  try {
+    String currentPath = controller.getCurrentPath;
+    // workaround pour refresh (navigue dans le dossier source et retourne dans le dossier ou le fichier a été upload)
+    await controller.goToParentDirectory();
+    controller.openDirectory(Directory(currentPath));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error refreshing: $e'),
+      ),
     );
   }
 }

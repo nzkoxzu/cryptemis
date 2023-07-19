@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 
-Cipher callAlg(String algchoice){
+Cipher callAlg(String algchoice) {
   /*
   Allows user to select a prefered algorithm
   */
@@ -28,7 +28,7 @@ Future<List<int>> getHash(String password, List<int> salt) async {
   for (int i = 0; i < password.length; i++) {
     values.add(password.codeUnitAt(i));
   }
-  final hash = await algorithm.hash(values+salt);
+  final hash = await algorithm.hash(values + salt);
   return hash.bytes;
 }
 
@@ -67,11 +67,11 @@ void exportConfig(String alg, String salt, String map, String directory) async {
   Exports the config
   */
   var config = {"algorithm": alg, "salt": salt, "hierarchy": map};
-  if (directory == ""){
+  if (directory == "") {
     File file = File('.cryptemis');
     file.writeAsString(jsonEncode(config));
   } else {
-    File file = File(directory+'/.cryptemis');
+    File file = File(directory + '/.cryptemis');
     file.writeAsString(jsonEncode(config));
   }
   return null;
@@ -81,13 +81,13 @@ Future<String> importData(String data_to_import, String directory) async {
   /*
   Import selected data from the config
   */
-  if (directory == ""){
+  if (directory == "") {
     File file = File('.cryptemis');
     var content = await file.readAsString();
     var data = json.decode(content);
     return data[data_to_import];
   } else {
-    File file = File(directory+'/.cryptemis');
+    File file = File(directory + '/.cryptemis');
     var content = await file.readAsString();
     var data = json.decode(content);
     return data[data_to_import];
@@ -124,7 +124,7 @@ Future<Map<String, dynamic>> fileHierarchy(String directoryPath) async {
   return files;
 }
 
-void deleteDirectories(String directoryPath){
+void deleteDirectories(String directoryPath) {
   final Directory directory = Directory(directoryPath);
   final List<FileSystemEntity> entities = directory.listSync();
 
@@ -135,7 +135,8 @@ void deleteDirectories(String directoryPath){
   }
 }
 
-Future<int> cipherFile(Cipher alg, SecretKey key, String file_to_read, String file_to_write) async {
+Future<int> cipherFile(Cipher alg, SecretKey key, String file_to_read,
+    String file_to_write) async {
   try {
     final file = await File(file_to_read);
     final encrypted_file = await File(file_to_write).create(recursive: true);
@@ -146,27 +147,31 @@ Future<int> cipherFile(Cipher alg, SecretKey key, String file_to_read, String fi
 
     encrypted_file.writeAsBytes(cipherdata_file.concatenation());
     return 0;
-  } catch (e){
+  } catch (e) {
     return 1;
   }
 }
 
-Future<int> decipherFile(Cipher alg, SecretKey key, String file_to_read, String file_to_write) async {
+Future<int> decipherFile(Cipher alg, SecretKey key, String file_to_read,
+    String file_to_write) async {
   try {
     final file = await File(file_to_read);
     final decrypted_file = await File(file_to_write).create(recursive: true);
 
     final data_file = await file.readAsBytes();
     file.delete();
-    final cleardata_file = await alg.decrypt(SecretBox.fromConcatenation(data_file, nonceLength: alg.nonceLength, macLength: alg.macAlgorithm.macLength), secretKey: key);
+    final cleardata_file = await alg.decrypt(
+        SecretBox.fromConcatenation(data_file,
+            nonceLength: alg.nonceLength,
+            macLength: alg.macAlgorithm.macLength),
+        secretKey: key);
 
     decrypted_file.writeAsBytes(cleardata_file);
     return 0;
-  } catch (e){
+  } catch (e) {
     return 1;
   }
 }
-
 
 Future<SecretBox> cipherData(Cipher alg, SecretKey key, String data) async {
   /*
@@ -184,7 +189,8 @@ Future<String> decipherData(Cipher alg, SecretKey key, String msg) async {
   for (int i = 0; i < msg.length; i++) {
     secretbox.add(msg.codeUnitAt(i));
   }
-  final data = await SecretBox.fromConcatenation(secretbox, nonceLength: alg.nonceLength, macLength: alg.macAlgorithm.macLength);
+  final data = await SecretBox.fromConcatenation(secretbox,
+      nonceLength: alg.nonceLength, macLength: alg.macAlgorithm.macLength);
   final cleartext = await alg.decryptString(data, secretKey: key);
   return cleartext;
 }
@@ -197,9 +203,9 @@ Future<int> decipherDirectory(String password, String directory) async {
   final ciphermap = await importData("hierarchy", directory);
   try {
     var map = jsonDecode(await decipherData(alg, key, ciphermap));
-    for (var i in map.keys){
-      for (var k in map[i].keys){
-        await decipherFile(alg, key, directory+"/"+map[i][k], k);
+    for (var i in map.keys) {
+      for (var k in map[i].keys) {
+        await decipherFile(alg, key, directory + "/" + map[i][k], k);
       }
     }
     key.destroy();
@@ -221,43 +227,47 @@ Future<int> cipherDirectory(String password, String directory) async {
     var map_to_compare = await fileHierarchy(directory);
     if (map.toString() != map_to_compare.toString()) {
       final ciphermap = await cipherData(alg, key, json.encode(map_to_compare));
-      updateConfig(await bytesToHex(salt), password, new String.fromCharCodes(ciphermap.concatenation()), directory);
-      for (var i in map_to_compare.keys){
-        for (var k in map_to_compare[i].keys){
-          await cipherFile(alg, key, k, directory+"/"+map_to_compare[i][k]);
+      updateConfig(await bytesToHex(salt), password,
+          new String.fromCharCodes(ciphermap.concatenation()), directory);
+      for (var i in map_to_compare.keys) {
+        for (var k in map_to_compare[i].keys) {
+          await cipherFile(alg, key, k, directory + "/" + map_to_compare[i][k]);
         }
       }
     } else {
-      for (var i in map.keys){
-        for (var k in map[i].keys){
-          await cipherFile(alg, key, k, directory+"/"+map[i][k]);
+      for (var i in map.keys) {
+        for (var k in map[i].keys) {
+          await cipherFile(alg, key, k, directory + "/" + map[i][k]);
         }
       }
     }
     deleteDirectories(directory);
     key.destroy();
     return 0;
-  }catch (e) {
+  } catch (e) {
     return 1;
   }
 }
 
-void updateConfig(String salt, String password, String map, String directory) async {
+void updateConfig(
+    String salt, String password, String map, String directory) async {
   exportConfig(await importData("algorithm", directory), salt, map, directory);
 }
 
-Future<void> createConfig(String algorithm, String password, String directory) async {
+Future<void> createConfig(
+    String algorithm, String password, String directory) async {
   final alg = callAlg(algorithm);
   final salt = alg.newNonce();
   final hash = await getHash(password, salt);
   final key = await keyGen(alg, hash);
   final map = await fileHierarchy(directory);
   final ciphermap = await cipherData(alg, key, json.encode(map));
-  if (directory == ""){
+  if (directory == "") {
     final file = await File('.cryptemis').create(recursive: true);
   } else {
-    final file = await File(directory+'/.cryptemis').create(recursive: true);
+    final file = await File(directory + '/.cryptemis').create(recursive: true);
   }
-  exportConfig(algorithm, bytesToHex(salt), new String.fromCharCodes(ciphermap.concatenation()), directory);
+  exportConfig(algorithm, bytesToHex(salt),
+      new String.fromCharCodes(ciphermap.concatenation()), directory);
   key.destroy();
 }
