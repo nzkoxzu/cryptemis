@@ -1,4 +1,7 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 class OptionsSection extends StatelessWidget {
   const OptionsSection({super.key});
@@ -15,13 +18,32 @@ class OptionsSection extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment.start, // Alignement des enfants à gauche
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           IconButton(
             icon: const Icon(Icons.file_upload, size: 24),
-            onPressed: () {
-              // TODO: Implémenter la fonctionnalité d'upload de fichier
+            onPressed: () async {
+              // Using file picker to pick files to upload
+              FilePickerResult? result = await FilePicker.platform.pickFiles(
+                allowMultiple: true,
+                type: FileType.any,
+              );
+
+              if (result != null) {
+                List<File> files =
+                    result.paths.map((path) => File(path!)).toList();
+
+                for (File file in files) {
+                  Directory appDocDir =
+                      await getApplicationDocumentsDirectory();
+                  String appDocPath = appDocDir.path;
+                  String fileName = file.path.split('/').last;
+                  File newFile = File('$appDocPath/$fileName');
+                  await file.copy(newFile.path);
+                }
+              } else {
+                // user cancelled
+              }
             },
           ),
           const Text(
