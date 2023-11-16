@@ -12,38 +12,39 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.blue,
       body: SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
           child: Stack(
-        children: [
-          Transform(
-            transform: Matrix4.identity()..rotateZ(20),
-            origin: const Offset(150, 50),
-            child: Image.asset(
-              '/Users/nzkoxzu/cryptemis/assets/images/bg_liquid.png',
-              width: 200,
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 200,
-            child: Transform(
-              transform: Matrix4.identity()..rotateZ(20),
-              origin: const Offset(180, 100),
-              child: Image.asset(
-                '/Users/nzkoxzu/cryptemis/assets/images/bg_liquid.png',
-                width: 200,
-              ),
-            ),
-          ),
-          Column(
             children: [
-              HeaderSection(),
-              SearchSection(),
-              OptionsSection(),
-              FilesSection(),
+              Transform(
+                transform: Matrix4.identity()..rotateZ(20),
+                origin: const Offset(150, 50),
+                child: Image.asset(
+                  '/Users/nzkoxzu/cryptemis/assets/images/bg_liquid.png',
+                  width: 200,
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 200,
+                child: Transform(
+                  transform: Matrix4.identity()..rotateZ(20),
+                  origin: const Offset(180, 100),
+                  child: Image.asset(
+                    '/Users/nzkoxzu/cryptemis/assets/images/bg_liquid.png',
+                    width: 200,
+                  ),
+                ),
+              ),
+              Column(
+                children: [
+                  HeaderSection(),
+                  SearchSection(),
+                  OptionsSection(),
+                  FilesSection(),
+                ],
+              ),
             ],
-          ),
-        ],
-      )),
+          )),
       bottomNavigationBar: NavigationBar(),
     );
   }
