@@ -22,8 +22,25 @@ class _FilesSectionState extends State<FilesSection> {
 
   Future<List<FileSystemEntity>> _listFiles() async {
     final directory = await getApplicationDocumentsDirectory();
-    final List<FileSystemEntity> files = directory.listSync();
-    return files;
+    final List<FileSystemEntity> filesAndDirectories = directory.listSync();
+
+    // split files and folders
+    final List<FileSystemEntity> directories = [];
+    final List<FileSystemEntity> files = [];
+
+    for (var entity in filesAndDirectories) {
+      if (entity is Directory) {
+        directories.add(entity);
+      } else {
+        files.add(entity);
+      }
+    }
+
+    // sort files and folder in alphabetical order
+    directories
+        .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+    files.sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+    return directories + files;
   }
 
   void refreshFiles() {
@@ -61,8 +78,7 @@ class _FilesSectionState extends State<FilesSection> {
         style: TextStyle(fontSize: 16.0),
       ),
       trailing: Checkbox(
-        value:
-            false, // Ceci doit être lié à une valeur de contrôle pour chaque fichier
+        value: false,
         onChanged: (bool? value) {
           // Gérer le changement de valeur
         },
