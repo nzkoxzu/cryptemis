@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 class OptionsSection extends StatelessWidget {
-  const OptionsSection({super.key});
+  final VoidCallback? refreshFiles;
+  const OptionsSection({Key? key, this.refreshFiles}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +45,7 @@ class OptionsSection extends StatelessWidget {
               } else {
                 // user cancelled
               }
+              refreshFiles;
             },
           ),
           const Text(
