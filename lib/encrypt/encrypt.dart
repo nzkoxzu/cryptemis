@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cryptemis/home/home.dart';
-import 'package:cryptemis/encrypt/encrypt.dart';
-import 'package:cryptemis/settings/header.dart';
-import 'package:cryptemis/settings/options.dart';
+import 'package:cryptemis/encrypt/header.dart';
+import 'package:cryptemis/encrypt/options.dart';
+import 'package:cryptemis/settings/settings.dart';
 
-class SettingsPage extends StatelessWidget {
+class EncryptPage extends StatelessWidget {
+  const EncryptPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,7 +65,7 @@ Widget _navigationBar(BuildContext context) {
           topRight: Radius.circular(30),
         ),
         child: BottomNavigationBar(
-          currentIndex: 2,
+          currentIndex: 1,
           selectedItemColor: Colors.blue,
           selectedFontSize: 12,
           unselectedFontSize: 12,
@@ -87,18 +89,10 @@ Widget _navigationBar(BuildContext context) {
             ),
             BottomNavigationBarItem(
               label: "Encrypt",
-              icon: Container(
-                margin: const EdgeInsets.all(5),
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.enhanced_encryption,
-                  size: 20,
-                  color: Colors.grey,
-                ),
+              icon: const Icon(
+                Icons.enhanced_encryption,
+                size: 30,
+                color: Colors.blue,
               ),
             ),
             BottomNavigationBarItem(
@@ -106,6 +100,10 @@ Widget _navigationBar(BuildContext context) {
               icon: Container(
                 margin: const EdgeInsets.all(5),
                 padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: const Icon(
                   Icons.settings,
                   size: 20,

@@ -4,6 +4,7 @@ import 'package:cryptemis/home/search.dart';
 import 'package:cryptemis/home/options.dart';
 import 'package:cryptemis/home/files.dart';
 import 'package:cryptemis/settings/settings.dart';
+import 'package:cryptemis/encrypt/encrypt.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -111,7 +112,7 @@ class HomePageState extends State<HomePage> {
                 ),
               ),
               BottomNavigationBarItem(
-                label: "Encryption",
+                label: "Encrypt",
                 icon: Container(
                   margin: const EdgeInsets.all(5),
                   padding: const EdgeInsets.all(5),
@@ -147,7 +148,12 @@ class HomePageState extends State<HomePage> {
               if (index == 0) {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                );
+              } else if (index == 1) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EncryptPage()),
                 );
               } else if (index == 2) {
                 Navigator.push(

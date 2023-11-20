@@ -9,8 +9,8 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext) {
-    return MaterialApp(
+  Widget build(context) {
+    return const MaterialApp(
       title: 'Cryptemis',
       debugShowCheckedModeBanner: false,
       home: HomePage(),
