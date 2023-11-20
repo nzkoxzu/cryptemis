@@ -26,7 +26,7 @@ class _FilesSectionState extends State<FilesSection> {
     final directory = await getApplicationDocumentsDirectory();
     final List<FileSystemEntity> filesAndDirectories = directory.listSync();
 
-    // Séparez les dossiers des fichiers
+    // split files and folders
     final List<FileSystemEntity> directories = [];
     final List<FileSystemEntity> files = [];
 
@@ -38,15 +38,14 @@ class _FilesSectionState extends State<FilesSection> {
       }
     }
 
-    // Triez les dossiers et les fichiers séparément dans l'ordre alphabétique
+    // sort files and folders by alphabetical order
     directories
         .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
     files.sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
-
-    // Fusionnez les dossiers triés et les fichiers triés
     return directories + files;
   }
 
+  // refresh
   void refreshFiles() {
     setState(() {
       _files = _listFiles();

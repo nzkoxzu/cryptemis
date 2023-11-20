@@ -37,19 +37,14 @@ class OptionsSection extends StatelessWidget {
       }
     }
 
-    if (failedDeletes.isNotEmpty) {
-      // print msg if failed to delete
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to delete some files'),
-        ),
-      );
-    }
+    // Clear the selected files after delete action
+    onFileSelectionChanged(Set<String>());
+
+    // Refresh file list
     refreshFiles();
-    onFileSelectionChanged(Set.from([]));
   }
 
-  Future<void> _pickAndUploadFiles() async {
+  Future<void> _pickAndUploadFiles(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
       type: FileType.any,
@@ -88,7 +83,7 @@ class OptionsSection extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.file_upload, size: 24),
             onPressed: () async {
-              await _pickAndUploadFiles();
+              await _pickAndUploadFiles(context);
             },
           ),
           const Text(
@@ -115,6 +110,7 @@ class OptionsSection extends StatelessWidget {
             icon: const Icon(Icons.delete, size: 24),
             onPressed: () {
               _deleteSelectedFiles(context);
+              refreshFiles();
             },
           ),
         ],

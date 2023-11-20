@@ -12,16 +12,16 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  // Ensemble des chemins des fichiers sélectionnés
-  Set<String> _selectedFiles = Set<String>();
+  Set<String> _selectedFiles = {};
+  int _refreshKey = 0;
 
-  // Méthode pour rafraîchir la liste des fichiers, par exemple après une suppression
+// Refresh method
   void _refreshFiles() {
-    // Vous devriez ici implémenter la logique pour rafraîchir la liste des fichiers
-    setState(() {});
+    setState(() {
+      _refreshKey++;
+    });
   }
 
-  // Méthode appelée lorsque la sélection des fichiers change
   void _onSelectedFilesChanged(Set<String> selectedFiles) {
     setState(() {
       _selectedFiles = selectedFiles;
@@ -65,6 +65,7 @@ class HomePageState extends State<HomePage> {
               ),
               Flexible(
                 child: FilesSection(
+                  key: ValueKey(_refreshKey),
                   onSelectedFilesChanged: _onSelectedFilesChanged,
                 ),
               ),
@@ -72,20 +73,21 @@ class HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(),
+      bottomNavigationBar: _navigationBar(),
     );
   }
 
-  Widget NavigationBar() {
+  Widget _navigationBar() {
     return Container(
       color: Colors.grey.shade100,
       child: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 5,
-                blurRadius: 10),
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 5,
+              blurRadius: 10,
+            ),
           ],
         ),
         child: ClipRRect(
