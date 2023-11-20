@@ -3,6 +3,7 @@ import 'package:cryptemis/home/header.dart';
 import 'package:cryptemis/home/search.dart';
 import 'package:cryptemis/home/options.dart';
 import 'package:cryptemis/home/files.dart';
+import 'package:cryptemis/settings/settings.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -142,6 +143,19 @@ class HomePageState extends State<HomePage> {
                 ),
               ),
             ],
+            onTap: (index) {
+              if (index == 0) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                );
+              } else if (index == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              }
+            },
           ),
         ),
       ),
