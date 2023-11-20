@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 class FilesSection extends StatefulWidget {
   final Function(Set<String>) onSelectedFilesChanged;
@@ -13,20 +14,31 @@ class FilesSection extends StatefulWidget {
 }
 
 class _FilesSectionState extends State<FilesSection> {
-  late Future<List<FileSystemEntity>> _files;
+  Future<List<FileSystemEntity>> _files = Future.value([]);
+  Directory? currentDirectory;
   final Set<String> _selectedFiles = {};
 
   @override
   void initState() {
     super.initState();
-    _files = _listFiles();
+    _initDirectory();
+  }
+
+  void _initDirectory() async {
+    currentDirectory = await getApplicationDocumentsDirectory();
+    _updateFileList();
+  }
+
+  void _updateFileList() {
+    setState(() {
+      _files = _listFiles();
+    });
   }
 
   Future<List<FileSystemEntity>> _listFiles() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final List<FileSystemEntity> filesAndDirectories = directory.listSync();
+    final List<FileSystemEntity> filesAndDirectories =
+        currentDirectory?.listSync() ?? [];
 
-    // split files and folders
     final List<FileSystemEntity> directories = [];
     final List<FileSystemEntity> files = [];
 
@@ -38,18 +50,11 @@ class _FilesSectionState extends State<FilesSection> {
       }
     }
 
-    // sort files and folders by alphabetical order
     directories
         .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
     files.sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
-    return directories + files;
-  }
 
-  // refresh
-  void refreshFiles() {
-    setState(() {
-      _files = _listFiles();
-    });
+    return directories + files;
   }
 
   void _handleFileSelection(String filePath, bool isSelected) {
@@ -70,7 +75,7 @@ class _FilesSectionState extends State<FilesSection> {
 
     if (file is Directory) {
       iconData = Icons.folder;
-      iconColor = Colors.black;
+      iconColor = Colors.amber;
     } else if (fileName.endsWith('.pdf')) {
       iconData = Icons.picture_as_pdf;
       iconColor = Colors.red;
@@ -100,7 +105,14 @@ class _FilesSectionState extends State<FilesSection> {
         },
       ),
       onTap: () {
-        _handleFileSelection(file.path, !isSelected);
+        if (file is Directory) {
+          setState(() {
+            currentDirectory = file;
+            _updateFileList();
+          });
+        } else {
+          OpenFile.open(file.path);
+        }
       },
     );
   }
@@ -112,7 +124,7 @@ class _FilesSectionState extends State<FilesSection> {
       color: Colors.grey.shade100,
       child: RefreshIndicator(
         onRefresh: () async {
-          refreshFiles();
+          _updateFileList();
         },
         child: FutureBuilder<List<FileSystemEntity>>(
           future: _files,
