@@ -68,6 +68,17 @@ class _FilesSectionState extends State<FilesSection> {
     });
   }
 
+  void _navigateToParentDirectory() {
+    final parentDirectory = currentDirectory?.parent;
+    if (parentDirectory != null &&
+        parentDirectory.path != currentDirectory?.path) {
+      setState(() {
+        currentDirectory = parentDirectory;
+        _updateFileList();
+      });
+    }
+  }
+
   Widget _buildFileItem(FileSystemEntity file) {
     IconData iconData;
     Color iconColor;
@@ -133,13 +144,19 @@ class _FilesSectionState extends State<FilesSection> {
               if (snapshot.hasError) {
                 return Center(child: Text('Erreur: ${snapshot.error}'));
               }
-
               if (snapshot.hasData) {
-                return ListView.builder(
-                  itemCount: snapshot.data?.length ?? 0,
-                  itemBuilder: (context, index) {
-                    return _buildFileItem(snapshot.data![index]);
+                return GestureDetector(
+                  onHorizontalDragEnd: (details) {
+                    if (details.primaryVelocity! > 0) {
+                      _navigateToParentDirectory();
+                    }
                   },
+                  child: ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      return _buildFileItem(snapshot.data![index]);
+                    },
+                  ),
                 );
               } else {
                 return Center(child: Text('Aucun fichier trouvé'));
