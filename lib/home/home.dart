@@ -12,6 +12,22 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  // Ensemble des chemins des fichiers sélectionnés
+  Set<String> _selectedFiles = Set<String>();
+
+  // Méthode pour rafraîchir la liste des fichiers, par exemple après une suppression
+  void _refreshFiles() {
+    // Vous devriez ici implémenter la logique pour rafraîchir la liste des fichiers
+    setState(() {});
+  }
+
+  // Méthode appelée lorsque la sélection des fichiers change
+  void _onSelectedFilesChanged(Set<String> selectedFiles) {
+    setState(() {
+      _selectedFiles = selectedFiles;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,9 +58,15 @@ class HomePageState extends State<HomePage> {
             children: [
               HeaderSection(),
               SearchSection(),
-              OptionsSection(),
+              OptionsSection(
+                selectedFiles: _selectedFiles,
+                refreshFiles: _refreshFiles,
+                onFileSelectionChanged: _onSelectedFilesChanged,
+              ),
               Flexible(
-                child: FilesSection(),
+                child: FilesSection(
+                  onSelectedFilesChanged: _onSelectedFilesChanged,
+                ),
               ),
             ],
           ),

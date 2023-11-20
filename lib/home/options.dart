@@ -1,11 +1,75 @@
+import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/material.dart';
 import 'dart:io';
 
 class OptionsSection extends StatelessWidget {
-  final VoidCallback? refreshFiles;
-  const OptionsSection({Key? key, this.refreshFiles}) : super(key: key);
+  final Set<String> selectedFiles;
+  final VoidCallback refreshFiles;
+  final Function(Set<String>) onFileSelectionChanged;
+
+  const OptionsSection({
+    Key? key,
+    required this.selectedFiles,
+    required this.refreshFiles,
+    required this.onFileSelectionChanged,
+  }) : super(key: key);
+
+  void _deleteSelectedFiles(BuildContext context) async {
+    if (selectedFiles.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No file selected'),
+        ),
+      );
+      return;
+    }
+
+    final List<String> failedDeletes = [];
+    for (var filePath in selectedFiles) {
+      try {
+        final file = File(filePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        failedDeletes.add(filePath);
+      }
+    }
+
+    if (failedDeletes.isNotEmpty) {
+      // print msg if failed to delete
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete some files'),
+        ),
+      );
+    }
+    refreshFiles();
+    onFileSelectionChanged(Set.from([]));
+  }
+
+  Future<void> _pickAndUploadFiles() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.any,
+    );
+
+    if (result != null) {
+      List<File> files = result.paths.map((path) => File(path!)).toList();
+
+      for (File file in files) {
+        Directory appDocDir = await getApplicationDocumentsDirectory();
+        String appDocPath = appDocDir.path;
+        String fileName = file.path.split('/').last;
+        File newFile = File('$appDocPath/$fileName');
+        await file.copy(newFile.path);
+      }
+      refreshFiles();
+    } else {
+      // User canceled the picker
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +78,8 @@ class OptionsSection extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(10), // Arrondi en haut à gauche
-          topRight: Radius.circular(10), // Arrondi en haut à droite
+          topLeft: Radius.circular(10),
+          topRight: Radius.circular(10),
         ),
       ),
       child: Row(
@@ -24,28 +88,7 @@ class OptionsSection extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.file_upload, size: 24),
             onPressed: () async {
-              // Using file picker to pick files to upload
-              FilePickerResult? result = await FilePicker.platform.pickFiles(
-                allowMultiple: true,
-                type: FileType.any,
-              );
-
-              if (result != null) {
-                List<File> files =
-                    result.paths.map((path) => File(path!)).toList();
-
-                for (File file in files) {
-                  Directory appDocDir =
-                      await getApplicationDocumentsDirectory();
-                  String appDocPath = appDocDir.path;
-                  String fileName = file.path.split('/').last;
-                  File newFile = File('$appDocPath/$fileName');
-                  await file.copy(newFile.path);
-                }
-              } else {
-                // user cancelled
-              }
-              refreshFiles;
+              await _pickAndUploadFiles();
             },
           ),
           const Text(
@@ -71,7 +114,7 @@ class OptionsSection extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete, size: 24),
             onPressed: () {
-              // TODO: Implémenter la fonctionnalité de suppression de dossiers
+              _deleteSelectedFiles(context);
             },
           ),
         ],

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FilesSection extends StatefulWidget {
-  final Function()? onRefreshRequested;
+  final Function(Set<String>) onSelectedFilesChanged;
 
-  const FilesSection({super.key, this.onRefreshRequested});
+  const FilesSection({Key? key, required this.onSelectedFilesChanged})
+      : super(key: key);
 
   @override
   _FilesSectionState createState() => _FilesSectionState();
@@ -13,6 +14,7 @@ class FilesSection extends StatefulWidget {
 
 class _FilesSectionState extends State<FilesSection> {
   late Future<List<FileSystemEntity>> _files;
+  final Set<String> _selectedFiles = {};
 
   @override
   void initState() {
@@ -24,7 +26,7 @@ class _FilesSectionState extends State<FilesSection> {
     final directory = await getApplicationDocumentsDirectory();
     final List<FileSystemEntity> filesAndDirectories = directory.listSync();
 
-    // split files and folders
+    // Séparez les dossiers des fichiers
     final List<FileSystemEntity> directories = [];
     final List<FileSystemEntity> files = [];
 
@@ -36,16 +38,29 @@ class _FilesSectionState extends State<FilesSection> {
       }
     }
 
-    // sort files and folder in alphabetical order
+    // Triez les dossiers et les fichiers séparément dans l'ordre alphabétique
     directories
         .sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
     files.sort((a, b) => a.path.toLowerCase().compareTo(b.path.toLowerCase()));
+
+    // Fusionnez les dossiers triés et les fichiers triés
     return directories + files;
   }
 
   void refreshFiles() {
     setState(() {
       _files = _listFiles();
+    });
+  }
+
+  void _handleFileSelection(String filePath, bool isSelected) {
+    setState(() {
+      if (isSelected) {
+        _selectedFiles.add(filePath);
+      } else {
+        _selectedFiles.remove(filePath);
+      }
+      widget.onSelectedFilesChanged(_selectedFiles);
     });
   }
 
@@ -68,6 +83,8 @@ class _FilesSectionState extends State<FilesSection> {
       iconColor = Colors.grey;
     }
 
+    bool isSelected = _selectedFiles.contains(file.path);
+
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: iconColor.withOpacity(0.2),
@@ -75,16 +92,16 @@ class _FilesSectionState extends State<FilesSection> {
       ),
       title: Text(
         fileName,
-        style: TextStyle(fontSize: 16.0),
+        style: const TextStyle(fontSize: 16.0),
       ),
       trailing: Checkbox(
-        value: false,
+        value: isSelected,
         onChanged: (bool? value) {
-          // Gérer le changement de valeur
+          _handleFileSelection(file.path, value ?? false);
         },
       ),
       onTap: () {
-        // Gérer l'appui sur un élément
+        _handleFileSelection(file.path, !isSelected);
       },
     );
   }
@@ -97,9 +114,6 @@ class _FilesSectionState extends State<FilesSection> {
       child: RefreshIndicator(
         onRefresh: () async {
           refreshFiles();
-          if (widget.onRefreshRequested != null) {
-            widget.onRefreshRequested!();
-          }
         },
         child: FutureBuilder<List<FileSystemEntity>>(
           future: _files,
