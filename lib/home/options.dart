@@ -6,6 +6,7 @@ import 'dart:io';
 class OptionsSection extends StatelessWidget {
   final Set<String> selectedFiles;
   final VoidCallback refreshFiles;
+  final Directory? currentDirectory;
   final Function(Set<String>) onFileSelectionChanged;
 
   const OptionsSection({
@@ -13,6 +14,7 @@ class OptionsSection extends StatelessWidget {
     required this.selectedFiles,
     required this.refreshFiles,
     required this.onFileSelectionChanged,
+    this.currentDirectory,
   }) : super(key: key);
 
   void _deleteSelectedFiles(BuildContext context) async {
@@ -53,11 +55,13 @@ class OptionsSection extends StatelessWidget {
     if (result != null) {
       List<File> files = result.paths.map((path) => File(path!)).toList();
 
+      // Utilisez currentDirectory si disponible; sinon, utilisez le répertoire des documents de l'application.
+      String targetPath = currentDirectory?.path ??
+          (await getApplicationDocumentsDirectory()).path;
+
       for (File file in files) {
-        Directory appDocDir = await getApplicationDocumentsDirectory();
-        String appDocPath = appDocDir.path;
         String fileName = file.path.split('/').last;
-        File newFile = File('$appDocPath/$fileName');
+        File newFile = File('$targetPath/$fileName');
         await file.copy(newFile.path);
       }
       refreshFiles();

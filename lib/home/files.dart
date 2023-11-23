@@ -5,9 +5,13 @@ import 'package:open_file/open_file.dart';
 
 class FilesSection extends StatefulWidget {
   final Function(Set<String>) onSelectedFilesChanged;
+  final Function(Directory) onDirectoryChanged;
 
-  const FilesSection({Key? key, required this.onSelectedFilesChanged})
-      : super(key: key);
+  const FilesSection({
+    Key? key,
+    required this.onSelectedFilesChanged,
+    required this.onDirectoryChanged,
+  }) : super(key: key);
 
   @override
   _FilesSectionState createState() => _FilesSectionState();
@@ -119,6 +123,7 @@ class _FilesSectionState extends State<FilesSection> {
         if (file is Directory) {
           setState(() {
             currentDirectory = file;
+            widget.onDirectoryChanged(file);
             _updateFileList();
           });
         } else {

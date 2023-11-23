@@ -5,6 +5,7 @@ import 'package:cryptemis/home/options.dart';
 import 'package:cryptemis/home/files.dart';
 import 'package:cryptemis/settings/settings.dart';
 import 'package:cryptemis/encrypt/encrypt.dart';
+import 'dart:io';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -15,6 +16,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   Set<String> _selectedFiles = {};
+  Directory? _currentDirectory;
   int _refreshKey = 0;
 
 // Refresh method
@@ -27,6 +29,12 @@ class HomePageState extends State<HomePage> {
   void _onSelectedFilesChanged(Set<String> selectedFiles) {
     setState(() {
       _selectedFiles = selectedFiles;
+    });
+  }
+
+  void _onDirectoryChanged(Directory newDirectory) {
+    setState(() {
+      _currentDirectory = newDirectory;
     });
   }
 
@@ -64,11 +72,13 @@ class HomePageState extends State<HomePage> {
                 selectedFiles: _selectedFiles,
                 refreshFiles: _refreshFiles,
                 onFileSelectionChanged: _onSelectedFilesChanged,
+                currentDirectory: _currentDirectory,
               ),
               Flexible(
                 child: FilesSection(
                   key: ValueKey(_refreshKey),
                   onSelectedFilesChanged: _onSelectedFilesChanged,
+                  onDirectoryChanged: _onDirectoryChanged,
                 ),
               ),
             ],
